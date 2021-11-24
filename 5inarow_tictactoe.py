@@ -16,7 +16,7 @@ GRID_SIZE_Y = 9*3
 #GRID_SIZE_Y = 420
 #GRID_SIZE_X = 116
 #GRID_SIZE_Y = 72
-USABLE_AMOUNT_OF_SCREEN = 0.96
+USABLE_AMOUNT_OF_SCREEN = 0.94
 SQUARE_PADDING = 0.05
 BOT_PLAY_DELAY = 0.1
 REPLAY_PLAY_DELAY = 1.5
@@ -24,8 +24,11 @@ REPLAY_PLAY_DELAY = 1.5
 RED = (236, 65, 69)
 GREEN = (61, 165, 96)
 
+
 def install(package):
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "--trusted-host", "pypi.org", "--trusted-host", "pypi.python.org", "--trusted-host", "files.pythonhosted.org", package])
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "--trusted-host", "pypi.org",
+                          "--trusted-host", "pypi.python.org", "--trusted-host", "files.pythonhosted.org", package])
+
 
 try:
     import pygame
@@ -212,75 +215,6 @@ def replay_bot(grid, playing_as):
     return (int(a[0]), int(a[1]))
 
 
-def find_best_turn(grid, playing_as, depth, return_coords):
-    if playing_as == 'x':
-        other = 'o'
-    else:
-        other = 'x'
-    possible_positions = []
-    for x in range(GRID_SIZE_X):
-        for y in range(GRID_SIZE_Y):
-            left_good = False
-            right_good = False
-            up_good = False
-            down_good = False
-            if x < GRID_SIZE_X-1:
-                right_good = True
-            if x > 1:
-                left_good = True
-            if y < GRID_SIZE_Y-1:
-                down_good = True
-            if y > 1:
-                up_good = True
-            if grid[x][y] != '_':
-                if up_good and left_good and grid[x-1][y-1] == '_':
-                    possible_positions.append([x-1, y-1])
-                if up_good and grid[x][y-1] == '_':
-                    possible_positions.append([x, y-1])
-                if right_good and up_good and grid[x+1][y-1] == '_':
-                    possible_positions.append([x+1, y-1])
-                if left_good and grid[x-1][y] == '_':
-                    possible_positions.append([x-1, y])
-                if right_good and grid[x+1][y] == '_':
-                    possible_positions.append([x+1, y])
-                if down_good and left_good and grid[x-1][y+1] == '_':
-                    possible_positions.append([x-1, y+1])
-                if down_good and grid[x][y+1] == '_':
-                    possible_positions.append([x, y+1])
-                if right_good and down_good and grid[x+1][y+1] == '_':
-                    possible_positions.append([x+1, y+1])
-    if len(possible_positions) == 0:
-        x = random.randint(0, GRID_SIZE_X-1)
-        y = random.randint(0, GRID_SIZE_Y-1)
-        return (x, y)
-    maxval = -100000000
-    maxi = []
-    for i, position in enumerate(possible_positions):
-        if return_coords:
-            print(i, len(possible_positions)-1)
-        test_grid = copy.deepcopy(grid)
-        test_grid[position[0]][position[1]] = playing_as
-        if depth > 0:
-            value = value_towards_x(find_best_turn(
-                test_grid, other, depth-1, False))
-        else:
-            value = value_towards_x(test_grid)
-        if playing_as == 'o':
-            value = value * -1
-        if value > maxval:
-            maxval = value
-            maxi = [i]
-        elif value == maxval:
-            maxi.append(i)
-    final_grid = copy.deepcopy(grid)
-    final_grid[possible_positions[random.choice(
-        maxi)][0]][possible_positions[random.choice(maxi)][1]] = playing_as
-    if return_coords:
-        return possible_positions[random.choice(maxi)]
-    else:
-        return (final_grid)
-
-
 def get_score_of(grid, x, y, coeff1, coeff2):
     score = 0
     if x < GRID_SIZE_X-4:
@@ -431,7 +365,8 @@ def minimax(grid, depth, alpha, beta, maximizing_player, return_pos, original_sc
         possible_positions.append(pos['pos'])
     if len(possible_positions) == 0:
         return ([GRID_SIZE_X//2, GRID_SIZE_Y//2])
-    possible_positions = possible_positions[math.floor(len(possible_positions)*0.35):]
+    possible_positions = possible_positions[math.floor(
+        len(possible_positions)*0.5):]
     bestPos = None
     if maximizing_player:
         maxEval = -100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -454,6 +389,7 @@ def minimax(grid, depth, alpha, beta, maximizing_player, return_pos, original_sc
         minEval = 100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
         for position in possible_positions:
             grid[position[0]][position[1]] = 'o'
+            stress = calculate_stress(grid, 'o')
             eval = minimax(grid, depth-1, alpha, beta, True, False,
                            original_scoregrid, placements+[position], coeff1, coeff2)
             grid[position[0]][position[1]] = '_'
@@ -468,9 +404,191 @@ def minimax(grid, depth, alpha, beta, maximizing_player, return_pos, original_sc
             return minEval
 
 
+def calculate_stress(grid, stress_from):
+    #positions = get_list_of_grid(grid)
+    # positions = inflate_gridlist(
+    #    positions, GRID_SIZE_X-1, GRID_SIZE_Y-1, amount=2, offset_x=-3, offset_y=-3)
+    lines = [
+        {'line': to_line_3('xxxx_'), 'val': 2},
+        {'line': to_line_3('xxxxo'), 'val': 1},
+        {'line': to_line_3('_xxx_'), 'val': 1},
+        {'line': to_line_3('x_xx_'), 'val': 1},
+    ]
+    positions = []
+    for x in range(GRID_SIZE_X):
+        for y in range(GRID_SIZE_Y):
+            positions.append((x, y))
+    total_stress = 0
+    for stress_yes in lines:
+        for pos in positions:
+            if grid[pos[0]][pos[1]] != '_':
+                continue
+            lines_to_check = []
+            for dir in [(1, -1), (1, 0), (1, 1), (0, 1)]:
+                lines_to_check.append(get_line_3(
+                    grid, (pos[0]+dir[0], pos[1]+dir[1]), 5, dir, stress_from == 'o'))
+            for line in lines_to_check:
+                if intersect_lines(stress_yes['line'], line):
+                    total_stress += stress_yes['val']
+    return total_stress
+
+
+def depth_search_4(grid, playing_as, placing_turn, depth, return_move=False):
+    if depth == 0:
+        return 0
+    placing_opponent = 'x'
+    if placing_turn == 'x':
+        placing_opponent = 'o'
+    playing_opponent = 'x'
+    if playing_as == 'x':
+        playing_opponent = 'o'
+    stress_from_bot = calculate_stress(grid, playing_as)
+    stress_from_opponent = calculate_stress(grid, playing_opponent)
+    if not return_move:
+        if stress_from_bot >= 2:
+            return 1
+        elif stress_from_opponent >= 2:
+            return -1
+    possible_positions = []
+    for x in range(GRID_SIZE_X):
+        for y in range(GRID_SIZE_Y):
+            if grid[x][y] != '_':
+                left_good = False
+                right_good = False
+                up_good = False
+                down_good = False
+                if x < GRID_SIZE_X-1:
+                    right_good = True
+                if x > 1:
+                    left_good = True
+                if y < GRID_SIZE_Y-1:
+                    down_good = True
+                if y > 1:
+                    up_good = True
+                if up_good and left_good and grid[x-1][y-1] == '_':
+                    possible_positions.append([x-1, y-1])
+                if up_good and grid[x][y-1] == '_':
+                    possible_positions.append([x, y-1])
+                if right_good and up_good and grid[x+1][y-1] == '_':
+                    possible_positions.append([x+1, y-1])
+                if left_good and grid[x-1][y] == '_':
+                    possible_positions.append([x-1, y])
+                if right_good and grid[x+1][y] == '_':
+                    possible_positions.append([x+1, y])
+                if down_good and left_good and grid[x-1][y+1] == '_':
+                    possible_positions.append([x-1, y+1])
+                if down_good and grid[x][y+1] == '_':
+                    possible_positions.append([x, y+1])
+                if right_good and down_good and grid[x+1][y+1] == '_':
+                    possible_positions.append([x+1, y+1])
+    tot = 0
+    cnt = 0
+    top = {'score': -10000000000000000000, 'pos': None}
+    cp_grid = json.loads(json.dumps(grid))
+    for pos in possible_positions:
+        cp_grid[pos[0]][pos[1]] = placing_turn
+        res = depth_search_4(cp_grid, playing_as, placing_opponent, depth-1)
+        if res != 0:
+            tot += res
+            cnt += 1
+        if res > top['score']:
+            top['score'] = res
+            top['pos'] = pos
+        cp_grid[pos[0]][pos[1]] = '_'
+    if return_move:
+        if top['pos'] == None:
+            return bot_attempt_2(grid, playing_as)
+        return top['pos']
+    if cnt == 0:
+        return 0
+    else:
+        return tot/cnt
+
+
+def bot_4(grid, playing_as):
+    opponent = 'x'
+    if playing_as == 'x':
+        opponent = 'o'
+    possible_positions = []
+    for x in range(GRID_SIZE_X):
+        for y in range(GRID_SIZE_Y):
+            if grid[x][y] != '_':
+                left_good = False
+                right_good = False
+                up_good = False
+                down_good = False
+                if x < GRID_SIZE_X-1:
+                    right_good = True
+                if x > 1:
+                    left_good = True
+                if y < GRID_SIZE_Y-1:
+                    down_good = True
+                if y > 1:
+                    up_good = True
+                if up_good and left_good and grid[x-1][y-1] == '_':
+                    possible_positions.append([x-1, y-1])
+                if up_good and grid[x][y-1] == '_':
+                    possible_positions.append([x, y-1])
+                if right_good and up_good and grid[x+1][y-1] == '_':
+                    possible_positions.append([x+1, y-1])
+                if left_good and grid[x-1][y] == '_':
+                    possible_positions.append([x-1, y])
+                if right_good and grid[x+1][y] == '_':
+                    possible_positions.append([x+1, y])
+                if down_good and left_good and grid[x-1][y+1] == '_':
+                    possible_positions.append([x-1, y+1])
+                if down_good and grid[x][y+1] == '_':
+                    possible_positions.append([x, y+1])
+                if right_good and down_good and grid[x+1][y+1] == '_':
+                    possible_positions.append([x+1, y+1])
+    if len(possible_positions) == 0:
+        return ([GRID_SIZE_X//2, GRID_SIZE_Y//2])
+    lines = [
+        to_line_3('---xx_xx-'),
+        to_line_3('--xxx_x--'),
+        to_line_3('-xxxx_---'),
+        to_line_3('--xoo_oo-'),
+        to_line_3('-xooo_o--'),
+        to_line_3('xoooo_---'),
+        to_line_3('x-ooo_o--'),
+        to_line_3('--ooo_o--'),
+        to_line_3('-_ooo_---'),
+        to_line_3('--_oo_o_-'),
+        to_line_3('---oo_o_-'),
+        to_line_3('--_oo_o--'),
+    ]
+    for line_to_defo in lines:
+        for pos in possible_positions:
+            lines_to_check = []
+            for x in range(-1, 2):
+                for y in range(-1, 2):
+                    if x != 0 or y != 0:
+                        dir = (x, y)
+                        lines_to_check.append(get_line_3(
+                            grid, (pos[0]-dir[0]*5, pos[1]-dir[1]*5), 9, dir, playing_as == 'o'))
+            for line in lines_to_check:
+                if intersect_lines(line_to_defo, line):
+                    return pos
+    cp_grid = json.loads(json.dumps(grid))
+    for pos in possible_positions:
+        cp_grid[pos[0]][pos[1]] = opponent
+        if calculate_stress(cp_grid, opponent) >= 2:
+            return pos
+        cp_grid[pos[0]][pos[1]] = '_'
+    if playing_as == 'x':
+        maximizing_player = True
+    else:
+        maximizing_player = False
+    out = minimax(grid, 2, -100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,
+                  100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000, maximizing_player, True, get_scoregrid(grid, 4, 2), [], 4, 2)
+    return (int(out[0]), int(out[1]))
+
+
 X_BOT = None
 O_BOT = bot_attempt_2
 
+bots = [{'name': 'Human', 'func': None}, {'name': 'Bot 2-3',
+                                          'func': bot_attempt_2}, {'name': 'Bot 4', 'func': bot_4}]
 
 pygame.init()
 
@@ -485,6 +603,8 @@ small_font = pygame.font.SysFont("calibri", int(
     (y_size-y_size*USABLE_AMOUNT_OF_SCREEN)/3))
 big_font = pygame.font.SysFont("calibri", 70)
 grid = []
+
+
 def setup():
     global grid
     global win, win_x_1, win_x_2, win_y_1, win_y_2
@@ -498,6 +618,7 @@ def setup():
         grid.append([])
         for y in range(GRID_SIZE_Y):
             grid[x].append('_')
+
 
 width = GRID_SIZE_X
 height = GRID_SIZE_Y
@@ -624,8 +745,9 @@ if not save_replay:
     O_BOT = replay_bot
 
 game_running = True
-x_player = 'Human'
-o_player = 'Robot'
+x_player = 0
+o_player = 2
+
 
 def menu():
     global X_BOT
@@ -646,30 +768,29 @@ def menu():
                     game_running = False
         button_size = (300, 170)
         button_spacing = 10
-        button_1_pos = (x_size//2, y_size//2-button_size[1]//2-button_spacing//2)
-        button_2_pos = (x_size//2, y_size//2+button_size[1]//2+button_spacing//2)
+        button_1_pos = (x_size//2, y_size//2 -
+                        button_size[1]//2-button_spacing//2)
+        button_2_pos = (x_size//2, y_size//2 +
+                        button_size[1]//2+button_spacing//2)
         mouse_pos = pygame.mouse.get_pos()
         screen.fill((44, 47, 51))
-        play_rect = pygame.Rect(button_1_pos[0]-button_size[0]//2, button_1_pos[1]-button_size[1]//2, button_size[0], button_size[1])
+        play_rect = pygame.Rect(
+            button_1_pos[0]-button_size[0]//2, button_1_pos[1]-button_size[1]//2, button_size[0], button_size[1])
         color = (34, 37, 41)
         if play_rect.collidepoint(mouse_pos[0], mouse_pos[1]):
             color = (0, 0, 0)
             if mouse_down and mouse_was_down:
                 running = False
-                if x_player == 'Human':
-                    X_BOT = None
-                else:
-                    X_BOT = bot_attempt_2
-                if o_player == 'Human':
-                    O_BOT = None
-                else:
-                    O_BOT = bot_attempt_2
+                X_BOT = bots[x_player]['func']
+                O_BOT = bots[o_player]['func']
         pygame.draw.rect(screen, color, play_rect, width=0, border_radius=10)
         #pygame.draw.rect(screen, (255, 255, 255), play_rect, width=1, border_radius=10)
         txt = 'play'
         text = big_font.render(txt, True, (153, 170, 181))
-        screen.blit(text, (button_1_pos[0]-big_font.size(txt)[0]//2, button_1_pos[1]-big_font.size(txt)[1]//2))
-        quit_rect = pygame.Rect(button_2_pos[0]-button_size[0]//2, button_2_pos[1]-button_size[1]//2, button_size[0], button_size[1])
+        screen.blit(text, (button_1_pos[0]-big_font.size(txt)
+                    [0]//2, button_1_pos[1]-big_font.size(txt)[1]//2))
+        quit_rect = pygame.Rect(
+            button_2_pos[0]-button_size[0]//2, button_2_pos[1]-button_size[1]//2, button_size[0], button_size[1])
         color = (34, 37, 41)
         if quit_rect.collidepoint(mouse_pos[0], mouse_pos[1]):
             color = (0, 0, 0)
@@ -680,22 +801,22 @@ def menu():
         #pygame.draw.rect(screen, (255, 255, 255), quit_rect, width=1, border_radius=10)
         txt = 'quit'
         text = big_font.render(txt, True, (153, 170, 181))
-        screen.blit(text, (button_2_pos[0]-big_font.size(txt)[0]//2, button_2_pos[1]-big_font.size(txt)[1]//2))
-        
+        screen.blit(text, (button_2_pos[0]-big_font.size(txt)
+                    [0]//2, button_2_pos[1]-big_font.size(txt)[1]//2))
+
         x_toggle_button = pygame.Rect(25, 25, 75, 75)
         color = (34, 37, 41)
         if x_toggle_button.collidepoint(mouse_pos[0], mouse_pos[1]):
             color = (0, 0, 0)
             if mouse_down and not mouse_was_down:
-                if x_player == 'Human':
-                    x_player = 'Robot'
-                else:
-                    x_player = 'Human'
-        pygame.draw.rect(screen, color, x_toggle_button, width=0, border_radius=10)
+                x_player += 1
+        x_player %= len(bots)
+        pygame.draw.rect(screen, color, x_toggle_button,
+                         width=0, border_radius=10)
         #pygame.draw.rect(screen, (255, 255, 255), x_toggle_button, width=1, border_radius=10)
         pygame.draw.line(screen, (255, 0, 0), (30, 30), (95, 95), width=2)
         pygame.draw.line(screen, (255, 0, 0), (30, 95), (95, 30), width=2)
-        txt = x_player
+        txt = bots[x_player]['name']
         text = big_font.render(txt, True, (153, 170, 181))
         screen.blit(text, (125, 25+75/2-big_font.size(txt)[1]/2))
 
@@ -704,20 +825,20 @@ def menu():
         if o_toggle_button.collidepoint(mouse_pos[0], mouse_pos[1]):
             color = (0, 0, 0)
             if mouse_down and not mouse_was_down:
-                if o_player == 'Human':
-                    o_player = 'Robot'
-                else:
-                    o_player = 'Human'
-        pygame.draw.rect(screen, color, o_toggle_button, width=0, border_radius=10)
+                o_player += 1
+        o_player %= len(bots)
+        pygame.draw.rect(screen, color, o_toggle_button,
+                         width=0, border_radius=10)
         #pygame.draw.rect(screen, (255, 255, 255), o_toggle_button, width=1, border_radius=10)
-        pygame.draw.ellipse(screen, GREEN, pygame.Rect(30, 130, 65, 65), width=2)
-        txt = o_player
+        pygame.draw.ellipse(
+            screen, GREEN, pygame.Rect(30, 130, 65, 65), width=2)
+        txt = bots[o_player]['name']
         text = big_font.render(txt, True, (153, 170, 181))
         screen.blit(text, (125, 125+75/2-big_font.size(txt)[1]/2))
 
         pygame.display.flip()
         mouse_was_down = mouse_down
-        
+
 
 def main():
     global turn_times
@@ -772,7 +893,7 @@ def main():
                              2-height/2), (line, y_size/2+height/2), width=1)
         for line in horiz_lines:
             pygame.draw.line(screen, (153, 170, 181), (x_size /
-                             2-width/2, line), (x_size/2+width/2, line), width=1)
+                             2-width/2, line), (x_size/2+width/2, line), width=2)
         collide_with_x = None
         collide_with_y = None
         mouse_x, mouse_y = pygame.mouse.get_pos()
@@ -810,7 +931,7 @@ def main():
                     if save_replay:
                         replay.append(str(collide_with_x) +
                                       ','+str(collide_with_y))
-                        #with open(replay_file, 'w') as f:
+                        # with open(replay_file, 'w') as f:
                         #    f.write(':'.join(replay))
                     last_x = collide_with_x
                     last_y = collide_with_y
@@ -848,7 +969,7 @@ def main():
                         if save_replay:
                             replay.append(str(coords_to_place[0]) +
                                           ','+str(coords_to_place[1]))
-                            #with open(replay_file, 'w') as f:
+                            # with open(replay_file, 'w') as f:
                             #    f.write(':'.join(replay))
                         last_x = coords_to_place[0]
                         last_y = coords_to_place[1]
@@ -892,14 +1013,15 @@ def main():
                 txt = "'s turn "
             else:
                 txt = " has won! "
-            if turnbot == None:
-                txt += '(human)'
-            else:
-                txt += '(robot)'
+            if turn == 'x':
+                txt += '('+bots[x_player]['name']+')'
+            elif turn == 'o':
+                txt += '('+bots[o_player]['name']+')'
             text = small_font.render(txt, True, (153, 170, 181))
             screen.blit(text, (15+height_of_label, 10))
 
         pygame.display.flip()
+
 
 if save_replay:
     while game_running:
@@ -912,7 +1034,7 @@ else:
     setup()
     main()
 
-#setup()
-#main()
+# setup()
+# main()
 
 pygame.quit()
