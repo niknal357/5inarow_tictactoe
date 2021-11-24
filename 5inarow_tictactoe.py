@@ -665,7 +665,7 @@ def menu():
                 else:
                     O_BOT = bot_attempt_2
         pygame.draw.rect(screen, color, play_rect, width=0, border_radius=10)
-        pygame.draw.rect(screen, (255, 255, 255), play_rect, width=1, border_radius=10)
+        #pygame.draw.rect(screen, (255, 255, 255), play_rect, width=1, border_radius=10)
         txt = 'play'
         text = big_font.render(txt, True, (153, 170, 181))
         screen.blit(text, (button_1_pos[0]-big_font.size(txt)[0]//2, button_1_pos[1]-big_font.size(txt)[1]//2))
@@ -677,7 +677,7 @@ def menu():
                 game_running = False
                 running = False
         pygame.draw.rect(screen, color, quit_rect, width=0, border_radius=10)
-        pygame.draw.rect(screen, (255, 255, 255), quit_rect, width=1, border_radius=10)
+        #pygame.draw.rect(screen, (255, 255, 255), quit_rect, width=1, border_radius=10)
         txt = 'quit'
         text = big_font.render(txt, True, (153, 170, 181))
         screen.blit(text, (button_2_pos[0]-big_font.size(txt)[0]//2, button_2_pos[1]-big_font.size(txt)[1]//2))
@@ -692,7 +692,7 @@ def menu():
                 else:
                     x_player = 'Human'
         pygame.draw.rect(screen, color, x_toggle_button, width=0, border_radius=10)
-        pygame.draw.rect(screen, (255, 255, 255), x_toggle_button, width=1, border_radius=10)
+        #pygame.draw.rect(screen, (255, 255, 255), x_toggle_button, width=1, border_radius=10)
         pygame.draw.line(screen, (255, 0, 0), (30, 30), (95, 95), width=2)
         pygame.draw.line(screen, (255, 0, 0), (30, 95), (95, 30), width=2)
         txt = x_player
@@ -709,7 +709,7 @@ def menu():
                 else:
                     o_player = 'Human'
         pygame.draw.rect(screen, color, o_toggle_button, width=0, border_radius=10)
-        pygame.draw.rect(screen, (255, 255, 255), o_toggle_button, width=1, border_radius=10)
+        #pygame.draw.rect(screen, (255, 255, 255), o_toggle_button, width=1, border_radius=10)
         pygame.draw.ellipse(screen, GREEN, pygame.Rect(30, 130, 65, 65), width=2)
         txt = o_player
         text = big_font.render(txt, True, (153, 170, 181))
