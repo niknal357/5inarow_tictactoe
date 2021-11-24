@@ -811,7 +811,7 @@ def main():
                         replay.append(str(collide_with_x) +
                                       ','+str(collide_with_y))
                         #with open(replay_file, 'w') as f:
-                        #    f.write(':'.join(replay))
+                        #    f.(':'.join(replay))
                     last_x = collide_with_x
                     last_y = collide_with_y
                     scan_for_win(grid)
@@ -848,8 +848,8 @@ def main():
                         if save_replay:
                             replay.append(str(coords_to_place[0]) +
                                           ','+str(coords_to_place[1]))
-                            with open(replay_file, 'w') as f:
-                                f.write(':'.join(replay))
+                            #with open(replay_file, 'w') as f:
+                            #    f.write(':'.join(replay))
                         last_x = coords_to_place[0]
                         last_y = coords_to_place[1]
                         scan_for_win(grid)
