@@ -414,7 +414,7 @@ def bot_attempt_2(grid, playing_as):
         maximizing_player = True
     else:
         maximizing_player = False
-    out = minimax(grid, 3, -100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,
+    out = minimax(grid, 2, -100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,
                   100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000, maximizing_player, True, get_scoregrid(grid, 4, 2), [], 4, 2)
     return (int(out[0]), int(out[1]))
 
@@ -431,7 +431,7 @@ def minimax(grid, depth, alpha, beta, maximizing_player, return_pos, original_sc
         possible_positions.append(pos['pos'])
     if len(possible_positions) == 0:
         return ([GRID_SIZE_X//2, GRID_SIZE_Y//2])
-    possible_positions = possible_positions[math.floor(len(possible_positions)*(0.95-depth/10)):]
+    possible_positions = possible_positions[math.floor(len(possible_positions)*0.35):]
     bestPos = None
     if maximizing_player:
         maxEval = -100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
