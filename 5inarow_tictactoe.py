@@ -20,7 +20,7 @@ USABLE_AMOUNT_OF_SCREEN = 0.94
 SQUARE_PADDING = 0.05
 BOT_PLAY_DELAY = 0.1
 REPLAY_PLAY_DELAY = 1.5
-VERSION = 'v1.4'
+VERSION = 'v1.4.1 (Kabir update)'
 
 RED = (236, 65, 69)
 GREEN = (61, 165, 96)
@@ -29,7 +29,6 @@ GREEN = (61, 165, 96)
 def install(package):
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--trusted-host", "pypi.org",
                           "--trusted-host", "pypi.python.org", "--trusted-host", "files.pythonhosted.org", package])
-
 
 try:
     import pygame
@@ -592,11 +591,74 @@ def bot_4(grid, playing_as):
                   100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000, maximizing_player, True, get_scoregrid(grid, 4, 2), [], 4, 2)
     return (int(out[0]), int(out[1]))
 
+def Kabir(grid, playing_as):
+    opponent = 'x'
+    if playing_as == 'x':
+        opponent = 'o'
+    possible_positions = []
+    for x in range(GRID_SIZE_X):
+        for y in range(GRID_SIZE_Y):
+            if grid[x][y] != '_':
+                left_good = False
+                right_good = False
+                up_good = False
+                down_good = False
+                if x < GRID_SIZE_X-1:
+                    right_good = True
+                if x > 1:
+                    left_good = True
+                if y < GRID_SIZE_Y-1:
+                    down_good = True
+                if y > 1:
+                    up_good = True
+                if up_good and left_good and grid[x-1][y-1] == '_':
+                    possible_positions.append([x-1, y-1])
+                if up_good and grid[x][y-1] == '_':
+                    possible_positions.append([x, y-1])
+                if right_good and up_good and grid[x+1][y-1] == '_':
+                    possible_positions.append([x+1, y-1])
+                if left_good and grid[x-1][y] == '_':
+                    possible_positions.append([x-1, y])
+                if right_good and grid[x+1][y] == '_':
+                    possible_positions.append([x+1, y])
+                if down_good and left_good and grid[x-1][y+1] == '_':
+                    possible_positions.append([x-1, y+1])
+                if down_good and grid[x][y+1] == '_':
+                    possible_positions.append([x, y+1])
+                if right_good and down_good and grid[x+1][y+1] == '_':
+                    possible_positions.append([x+1, y+1])
+    if len(possible_positions) == 0:
+        return ([GRID_SIZE_X//2, GRID_SIZE_Y//2])
+    lines = [
+        to_line_3('---xx_xx-'),
+        to_line_3('--xxx_x--'),
+        to_line_3('-xxxx_---'),
+        to_line_3('--xoo_oo-'),
+        to_line_3('-xooo_o--'),
+        to_line_3('xoooo_---'),
+        to_line_3('x-ooo_o--'),
+        to_line_3('--ooo_o--'),
+        to_line_3('-_ooo_---'),
+    ]
+    for line_to_defo in lines:
+        for pos in possible_positions:
+            lines_to_check = []
+            for x in range(-1, 2):
+                for y in range(-1, 2):
+                    if x != 0 or y != 0:
+                        dir = (x, y)
+                        lines_to_check.append(get_line_3(
+                            grid, (pos[0]-dir[0]*5, pos[1]-dir[1]*5), 9, dir, playing_as == 'o'))
+            for line in lines_to_check:
+                if intersect_lines(line_to_defo, line):
+                    return pos
+    return random.choice(possible_positions)
+
 
 X_BOT = None
 O_BOT = bot_attempt_2
 
-bots = [{'name': 'Human', 'func': None}, {'name': 'Bot 2-3',
+bots = [{'name': 'Human', 'func': None}, {'name': 'Kabir', 'func': Kabir}, {'name': 'Bot 2-3',
                                           'func': bot_attempt_2}, {'name': 'Bot 3', 'func': bot_3}, {'name': 'Bot 4', 'func': bot_4}]
 
 pygame.init()
