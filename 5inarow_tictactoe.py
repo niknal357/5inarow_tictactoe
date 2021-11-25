@@ -20,6 +20,7 @@ USABLE_AMOUNT_OF_SCREEN = 0.94
 SQUARE_PADDING = 0.05
 BOT_PLAY_DELAY = 0.1
 REPLAY_PLAY_DELAY = 1.5
+VERSION = 'v1.4'
 
 RED = (236, 65, 69)
 GREEN = (61, 165, 96)
@@ -843,6 +844,9 @@ def menu():
         txt = bots[o_player]['name']
         text = big_font.render(txt, True, (153, 170, 181))
         screen.blit(text, (125, 125+75/2-big_font.size(txt)[1]/2))
+        txt = VERSION
+        text = small_font.render(txt, True, (153, 170, 181))
+        screen.blit(text, (x_size-15-small_font.size(txt)[0], y_size-15-small_font.size(txt)[1]))
 
         pygame.display.flip()
         mouse_was_down = mouse_down
@@ -1027,7 +1031,9 @@ def main():
                 txt += '('+bots[o_player]['name']+')'
             text = small_font.render(txt, True, (153, 170, 181))
             screen.blit(text, (15+height_of_label, 10))
-
+        txt = VERSION
+        text = small_font.render(txt, True, (153, 170, 181))
+        screen.blit(text, (x_size-15-small_font.size(txt)[0], y_size-15-small_font.size(txt)[1]))
         pygame.display.flip()
 
 
