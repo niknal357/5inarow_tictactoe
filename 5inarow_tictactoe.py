@@ -817,7 +817,7 @@ if not save_replay:
 
 game_running = True
 x_player = 0
-o_player = 3
+o_player = -1
 
 
 def menu():
