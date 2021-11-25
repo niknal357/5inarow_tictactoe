@@ -1,5 +1,4 @@
 import subprocess
-import copy
 import time
 import random
 import math
@@ -20,10 +19,19 @@ USABLE_AMOUNT_OF_SCREEN = 0.94
 SQUARE_PADDING = 0.05
 BOT_PLAY_DELAY = 0.1
 REPLAY_PLAY_DELAY = 1.5
-VERSION = 'v1.4.3'
+VERSION = 'v1.5'
 
 RED = (236, 65, 69)
 GREEN = (61, 165, 96)
+RED_LIGHT = (242, 87, 87)
+GREEN_LIGHT = (87, 242, 135)
+RED_DARK = (236//2, 65//2, 69//2)
+GREEN_DARK = (61//2, 165//2, 96//2)
+WHITE = (246, 246, 246)
+BACKGROUND = (44, 47, 51)
+BACKGROUND_DARK = (35, 39, 42)
+BLACK = (35//2, 39//2, 42//2)
+GREY = (80, 80, 80)
 
 
 def install(package):
@@ -422,8 +430,6 @@ def calculate_stress(grid, stress_from):
     total_stress = 0
     for stress_yes in lines:
         for pos in positions:
-            if grid[pos[0]][pos[1]] != '_':
-                continue
             lines_to_check = []
             for dir in [(1, -1), (1, 0), (1, 1), (0, 1)]:
                 lines_to_check.append(get_line_3(
@@ -432,6 +438,16 @@ def calculate_stress(grid, stress_from):
                 if intersect_lines(stress_yes['line'], line):
                     total_stress += stress_yes['val']
     return total_stress
+
+
+def calculate_stress_2(grid, stress_from):
+    to_test = []
+    for x in range(GRID_SIZE_X):
+        for y in range(GRID_SIZE_Y):
+            if grid[x][y] != '_':
+                to_test.append((x, y))
+    for pos in to_test:
+        pass
 
 
 def depth_search_4(grid, playing_as, placing_turn, depth, return_move=False):
@@ -638,6 +654,26 @@ def bot_5(grid, playing_as):
         to_line_3('--xoo_oo-'),
         to_line_3('-xooo_o--'),
         to_line_3('xoooo_---'),
+    ]
+    for line_to_defo in lines:
+        for pos in possible_positions:
+            lines_to_check = []
+            for x in range(-1, 2):
+                for y in range(-1, 2):
+                    if x != 0 or y != 0:
+                        dir = (x, y)
+                        lines_to_check.append(get_line_3(
+                            grid, (pos[0]-dir[0]*5, pos[1]-dir[1]*5), 9, dir, playing_as == 'o'))
+            for line in lines_to_check:
+                if intersect_lines(line_to_defo, line):
+                    return pos
+    cp_grid = json.loads(json.dumps(grid))
+    for pos in possible_positions:
+        cp_grid[pos[0]][pos[1]] = opponent
+        if calculate_stress(cp_grid, opponent) >= 2:
+            return pos
+        cp_grid[pos[0]][pos[1]] = '_'
+    lines = [
         to_line_3('x-ooo_o--'),
         to_line_3('--ooo_o--'),
         to_line_3('-_ooo__--'),
@@ -660,12 +696,6 @@ def bot_5(grid, playing_as):
                     return pos
     #stress_from_me = calculate_stress(grid, playing_as)
     stress_from_opponent = calculate_stress(grid, playing_as)
-    cp_grid = json.loads(json.dumps(grid))
-    for pos in possible_positions:
-        cp_grid[pos[0]][pos[1]] = opponent
-        if calculate_stress(cp_grid, opponent) >= 2:
-            return pos
-        cp_grid[pos[0]][pos[1]] = '_'
     if stress_from_opponent < 2:
         for pos in possible_positions:
             cp_grid[pos[0]][pos[1]] = playing_as
@@ -720,11 +750,13 @@ def Kabir(grid, playing_as):
     if len(possible_positions) == 0:
         return ([GRID_SIZE_X//2, GRID_SIZE_Y//2])
     lines = [
-        to_line_3('---xx_xx-'),
-        to_line_3('--xxx_x--'),
+        # to_line_3('---xx_xx-'),
         to_line_3('-xxxx_---'),
+        to_line_3('--xxx_x--'),
         to_line_3('--xoo_oo-'),
+        to_line_3('---oo_oo-'),
         to_line_3('-xooo_o--'),
+        to_line_3('--ooo_o--'),
         to_line_3('xoooo_---'),
         to_line_3('x-ooo_o--'),
         to_line_3('--ooo_o--'),
@@ -748,7 +780,7 @@ def Kabir(grid, playing_as):
 X_BOT = None
 O_BOT = bot_attempt_2
 
-bots = [{'name': 'Human', 'func': None}, {'name': 'Kabir', 'func': Kabir}, {'name': 'Bot 2-3',
+bots = [{'name': 'Human', 'func': None}, {'name': 'Kabir', 'func': Kabir}, {'name': 'Bot 2',
                                                                             'func': bot_attempt_2}, {'name': 'Bot 3', 'func': bot_3}, {'name': 'Bot 4', 'func': bot_4}, {'name': 'Bot 4.5', 'func': bot_5}]
 
 pygame.init()
@@ -941,73 +973,79 @@ def menu():
         button_2_pos = (x_size//2, y_size//2 +
                         button_size[1]//2+button_spacing//2)
         mouse_pos = pygame.mouse.get_pos()
-        screen.fill((44, 47, 51))
+        screen.fill(BACKGROUND)
         play_rect = pygame.Rect(
             button_1_pos[0]-button_size[0]//2, button_1_pos[1]-button_size[1]//2, button_size[0], button_size[1])
-        color = (34, 37, 41)
+        color = BACKGROUND_DARK
         if play_rect.collidepoint(mouse_pos[0], mouse_pos[1]):
-            color = (0, 0, 0)
+            color = BLACK
             if mouse_down and mouse_was_down:
                 running = False
                 X_BOT = bots[x_player]['func']
                 O_BOT = bots[o_player]['func']
         pygame.draw.rect(screen, color, play_rect, width=0, border_radius=10)
-        #pygame.draw.rect(screen, (255, 255, 255), play_rect, width=1, border_radius=10)
+        # pygame.draw.rect(screen, WHITE, play_rect,
+        #                 width=2, border_radius=10)
         txt = 'play'
-        text = big_font.render(txt, True, (153, 170, 181))
+        text = big_font.render(txt, True, WHITE)
         screen.blit(text, (button_1_pos[0]-big_font.size(txt)
                     [0]//2, button_1_pos[1]-big_font.size(txt)[1]//2))
         quit_rect = pygame.Rect(
             button_2_pos[0]-button_size[0]//2, button_2_pos[1]-button_size[1]//2, button_size[0], button_size[1])
-        color = (34, 37, 41)
+        color = BACKGROUND_DARK
         if quit_rect.collidepoint(mouse_pos[0], mouse_pos[1]):
-            color = (0, 0, 0)
+            color = BLACK
             if mouse_down and mouse_was_down:
                 game_running = False
                 running = False
         pygame.draw.rect(screen, color, quit_rect, width=0, border_radius=10)
-        #pygame.draw.rect(screen, (255, 255, 255), quit_rect, width=1, border_radius=10)
+        # pygame.draw.rect(screen, WHITE, quit_rect,
+        #                 width=2, border_radius=10)
         txt = 'quit'
-        text = big_font.render(txt, True, (153, 170, 181))
+        text = big_font.render(txt, True, WHITE)
         screen.blit(text, (button_2_pos[0]-big_font.size(txt)
                     [0]//2, button_2_pos[1]-big_font.size(txt)[1]//2))
 
         x_toggle_button = pygame.Rect(25, 25, 75, 75)
-        color = (34, 37, 41)
+        color = BACKGROUND_DARK
         if x_toggle_button.collidepoint(mouse_pos[0], mouse_pos[1]):
-            color = (0, 0, 0)
+            color = BLACK
             if mouse_down and not mouse_was_down:
                 x_player += 1
         x_player %= len(bots)
         pygame.draw.rect(screen, color, x_toggle_button,
                          width=0, border_radius=10)
-        #pygame.draw.rect(screen, (255, 255, 255), x_toggle_button, width=1, border_radius=10)
-        pygame.draw.line(screen, (255, 0, 0), (30, 30), (95, 95), width=2)
-        pygame.draw.line(screen, (255, 0, 0), (30, 95), (95, 30), width=2)
+        # pygame.draw.rect(screen, WHITE,
+        #                 x_toggle_button, width=2, border_radius=10)
+        pygame.draw.line(screen, RED, (30, 30), (95, 95), width=2)
+        pygame.draw.line(screen, RED, (30, 95), (95, 30), width=2)
         txt = bots[x_player]['name']
-        text = big_font.render(txt, True, (153, 170, 181))
+        text = big_font.render(txt, True, WHITE)
         screen.blit(text, (125, 25+75/2-big_font.size(txt)[1]/2))
 
         o_toggle_button = pygame.Rect(25, 125, 75, 75)
-        color = (34, 37, 41)
+        color = BACKGROUND_DARK
         if o_toggle_button.collidepoint(mouse_pos[0], mouse_pos[1]):
-            color = (0, 0, 0)
+            color = BLACK
             if mouse_down and not mouse_was_down:
                 o_player += 1
         o_player %= len(bots)
         pygame.draw.rect(screen, color, o_toggle_button,
                          width=0, border_radius=10)
-        #pygame.draw.rect(screen, (255, 255, 255), o_toggle_button, width=1, border_radius=10)
+        # pygame.draw.rect(screen, WHITE,
+        #                 o_toggle_button, width=2, border_radius=10)
         pygame.draw.ellipse(
             screen, GREEN, pygame.Rect(30, 130, 65, 65), width=2)
         txt = bots[o_player]['name']
-        text = big_font.render(txt, True, (153, 170, 181))
+        text = big_font.render(txt, True, WHITE)
         screen.blit(text, (125, 125+75/2-big_font.size(txt)[1]/2))
         txt = VERSION
-        text = small_font.render(txt, True, (153, 170, 181))
+        text = small_font.render(txt, True, WHITE)
         screen.blit(text, (x_size-15-small_font.size(txt)
                     [0], y_size-15-small_font.size(txt)[1]))
 
+        # pygame.draw.rect(screen, BLACK, pygame.Rect(
+        #    0, 0, x_size, y_size), width=10)
         pygame.display.flip()
         mouse_was_down = mouse_down
 
@@ -1061,12 +1099,12 @@ def main():
                     if collide_with_y != None:
                         pygame.mouse.set_pos(grid_coords[collide_with_x+1][collide_with_y][0]/2+grid_coords[collide_with_x+1][collide_with_y]
                                              [2]/2, grid_coords[collide_with_x+1][collide_with_y][1]/2+grid_coords[collide_with_x+1][collide_with_y][3]/2)
-        screen.fill((44, 47, 51))
+        screen.fill(BACKGROUND)
         for line in vert_lines:
-            pygame.draw.line(screen, (153, 170, 181), (line, y_size /
+            pygame.draw.line(screen, GREY, (line, y_size /
                              2-height/2), (line, y_size/2+height/2), width=1)
         for line in horiz_lines:
-            pygame.draw.line(screen, (153, 170, 181), (x_size /
+            pygame.draw.line(screen, GREY, (x_size /
                              2-width/2, line), (x_size/2+width/2, line), width=1)
         collide_with_x = None
         collide_with_y = None
@@ -1076,21 +1114,34 @@ def main():
                 square_rect = pygame.Rect((grid_coords[x][y][0], grid_coords[x][y][1]), (
                     grid_coords[x][y][2]-grid_coords[x][y][0], grid_coords[x][y][3]-grid_coords[x][y][1]))
                 if square_rect.collidepoint(mouse_x, mouse_y):
-                    pygame.draw.rect(screen, (35, 39, 42), square_rect)
+                    pygame.draw.rect(screen, BACKGROUND_DARK, square_rect)
+                    #draw_width = 3
+                    # if turn == 'x' and bots[x_player]['func'] == None and grid[x][y] == '_':
+                    #    pygame.draw.line(screen, RED_DARK, (grid_coords[x][y][0], grid_coords[x][y][1]), (
+                    #        grid_coords[x][y][2], grid_coords[x][y][3]), width=draw_width)
+                    #    pygame.draw.line(screen, RED_DARK, (grid_coords[x][y][0], grid_coords[x][y][3]), (
+                    #        grid_coords[x][y][2], grid_coords[x][y][1]), width=draw_width)
+                    # if turn == 'o' and bots[o_player]['func'] == None and grid[x][y] == '_':
+                    #    pygame.draw.ellipse(
+                    #        screen, GREEN_DARK, square_rect, width=draw_width)
                     collide_with_x = x
                     collide_with_y = y
                 if x == last_x and y == last_y:
-                    draw_width = 2
+                    draw_width = 3
+                    redcolor = RED_LIGHT
+                    greencolor = GREEN_LIGHT
                 else:
                     draw_width = 1
+                    redcolor = RED
+                    greencolor = GREEN
                 if grid[x][y] == 'x':
-                    pygame.draw.line(screen, RED, (grid_coords[x][y][0], grid_coords[x][y][1]), (
+                    pygame.draw.line(screen, redcolor, (grid_coords[x][y][0], grid_coords[x][y][1]), (
                         grid_coords[x][y][2], grid_coords[x][y][3]), width=draw_width)
-                    pygame.draw.line(screen, RED, (grid_coords[x][y][0], grid_coords[x][y][3]), (
+                    pygame.draw.line(screen, redcolor, (grid_coords[x][y][0], grid_coords[x][y][3]), (
                         grid_coords[x][y][2], grid_coords[x][y][1]), width=draw_width)
                 elif grid[x][y] == 'o':
                     pygame.draw.ellipse(
-                        screen, GREEN, square_rect, width=draw_width)
+                        screen, greencolor, square_rect, width=draw_width)
         if win == '_':
             if turnbot == None:
                 if pygame.mouse.get_pressed(num_buttons=3)[0] or pygame.key.get_pressed()[pygame.K_RETURN]:
@@ -1167,22 +1218,32 @@ def main():
         avg_fps = 0
         for fps in past_fpss:
             avg_fps += fps
+        if win == '_':
+            if turn == 'x':
+                color = RED
+            else:
+                color = GREEN
+            banner_height = small_font.size(VERSION)[1]+35
+            pygame.draw.rect(screen, color, pygame.Rect(
+                0, y_size-banner_height, x_size, banner_height))
+            # pygame.draw.rect(screen, color, pygame.Rect(
+            #    0, 0, x_size, y_size), width=10)
         if win == '-':
             txt = "draw!"
-            text = small_font.render(txt, True, (153, 170, 181))
+            text = small_font.render(txt, True, WHITE)
             screen.blit(text, (10, 10))
         else:
             if win != '_':
-                pygame.draw.line(screen, (153, 170, 181),
+                pygame.draw.line(screen, WHITE,
                                  (win_x_1, win_y_1), (win_x_2, win_y_2), width=3)
             if turn == 'x':
-                pygame.draw.line(screen, (236, 65, 69), (10, 10),
-                                 (height_of_label+10, height_of_label+10), width=2)
+                pygame.draw.line(screen, RED, (15, 15),
+                                 (height_of_label+15, height_of_label+15), width=2)
                 pygame.draw.line(
-                    screen, (236, 65, 69), (10, height_of_label+10), (height_of_label+10, 10), width=2)
+                    screen, RED, (15, height_of_label+15), (height_of_label+15, 15), width=2)
             elif turn == 'o':
-                pygame.draw.ellipse(screen, (61, 165, 96), pygame.Rect(
-                    10, 10, height_of_label, height_of_label), width=2)
+                pygame.draw.ellipse(screen, GREEN, pygame.Rect(
+                    15, 15, height_of_label, height_of_label), width=2)
             if win == '_':
                 txt = "'s turn "
             else:
@@ -1191,10 +1252,11 @@ def main():
                 txt += '('+bots[x_player]['name']+')'
             elif turn == 'o':
                 txt += '('+bots[o_player]['name']+')'
-            text = small_font.render(txt, True, (153, 170, 181))
-            screen.blit(text, (15+height_of_label, 10))
+            text = small_font.render(txt, True, WHITE)
+            screen.blit(text, (25+height_of_label, 15 +
+                        height_of_label/2 - small_font.size(txt)[1]/2))
         txt = VERSION
-        text = small_font.render(txt, True, (153, 170, 181))
+        text = small_font.render(txt, True, WHITE)
         screen.blit(text, (x_size-15-small_font.size(txt)
                     [0], y_size-15-small_font.size(txt)[1]))
         pygame.display.flip()
