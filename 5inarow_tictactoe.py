@@ -20,7 +20,7 @@ USABLE_AMOUNT_OF_SCREEN = 0.94
 SQUARE_PADDING = 0.05
 BOT_PLAY_DELAY = 0.1
 REPLAY_PLAY_DELAY = 1.5
-VERSION = 'v1.4.1 (Kabir update)'
+VERSION = 'v1.4.2'
 
 RED = (236, 65, 69)
 GREEN = (61, 165, 96)
@@ -678,12 +678,16 @@ grid = []
 
 def setup():
     global grid
+    global x_memory
+    global o_memory
     global win, win_x_1, win_x_2, win_y_1, win_y_2
     win = '_'
     win_x_1 = None
     win_y_2 = None
     win_x_2 = None
     win_y_2 = None
+    x_memory = None
+    o_memory = None
     grid = []
     for x in range(GRID_SIZE_X):
         grid.append([])
@@ -819,6 +823,8 @@ game_running = True
 x_player = 0
 o_player = -1
 
+x_memory = None
+o_memory = None
 
 def menu():
     global X_BOT
@@ -924,6 +930,8 @@ def main():
     global next_robot_turn_allowed
     global last_x
     global last_y
+    global x_memory
+    global o_memory
     running = True
     prevframe = time.time()
     past_fpss = []
@@ -967,7 +975,7 @@ def main():
                              2-height/2), (line, y_size/2+height/2), width=1)
         for line in horiz_lines:
             pygame.draw.line(screen, (153, 170, 181), (x_size /
-                             2-width/2, line), (x_size/2+width/2, line), width=2)
+                             2-width/2, line), (x_size/2+width/2, line), width=1)
         collide_with_x = None
         collide_with_y = None
         mouse_x, mouse_y = pygame.mouse.get_pos()
