@@ -569,12 +569,20 @@ def bot_4(grid, playing_as):
             for line in lines_to_check:
                 if intersect_lines(line_to_defo, line):
                     return pos
+    stress = calculate_stress(grid, playing_as)
     cp_grid = json.loads(json.dumps(grid))
-    for pos in possible_positions:
-        cp_grid[pos[0]][pos[1]] = opponent
-        if calculate_stress(cp_grid, opponent) >= 2:
-            return pos
-        cp_grid[pos[0]][pos[1]] = '_'
+    if stress < 1:
+        for pos in possible_positions:
+            cp_grid[pos[0]][pos[1]] = opponent
+            if calculate_stress(cp_grid, opponent) >= 2:
+                return pos
+            cp_grid[pos[0]][pos[1]] = '_'
+    elif stress < 2:
+        for pos in possible_positions:
+            cp_grid[pos[0]][pos[1]] = playing_as
+            if calculate_stress(cp_grid, playing_as) >= 2:
+                return pos
+            cp_grid[pos[0]][pos[1]] = '_'
     if playing_as == 'x':
         maximizing_player = True
     else:
@@ -588,7 +596,7 @@ X_BOT = None
 O_BOT = bot_attempt_2
 
 bots = [{'name': 'Human', 'func': None}, {'name': 'Bot 2-3',
-                                          'func': bot_attempt_2}, {'name': 'Bot 4', 'func': bot_4}]
+                                          'func': bot_attempt_2}, {'name': 'Bot 3', 'func': bot_3}, {'name': 'Bot 4', 'func': bot_4}]
 
 pygame.init()
 
@@ -746,7 +754,7 @@ if not save_replay:
 
 game_running = True
 x_player = 0
-o_player = 2
+o_player = 3
 
 
 def menu():
