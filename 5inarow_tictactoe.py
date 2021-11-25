@@ -20,7 +20,7 @@ USABLE_AMOUNT_OF_SCREEN = 0.94
 SQUARE_PADDING = 0.05
 BOT_PLAY_DELAY = 0.1
 REPLAY_PLAY_DELAY = 1.5
-VERSION = 'v1.4.2'
+VERSION = 'v1.4.3'
 
 RED = (236, 65, 69)
 GREEN = (61, 165, 96)
@@ -29,6 +29,7 @@ GREEN = (61, 165, 96)
 def install(package):
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--trusted-host", "pypi.org",
                           "--trusted-host", "pypi.python.org", "--trusted-host", "files.pythonhosted.org", package])
+
 
 try:
     import pygame
@@ -591,6 +592,95 @@ def bot_4(grid, playing_as):
                   100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000, maximizing_player, True, get_scoregrid(grid, 4, 2), [], 4, 2)
     return (int(out[0]), int(out[1]))
 
+
+def bot_5(grid, playing_as):
+    opponent = 'x'
+    if playing_as == 'x':
+        opponent = 'o'
+    possible_positions = []
+    for x in range(GRID_SIZE_X):
+        for y in range(GRID_SIZE_Y):
+            if grid[x][y] != '_':
+                left_good = False
+                right_good = False
+                up_good = False
+                down_good = False
+                if x < GRID_SIZE_X-1:
+                    right_good = True
+                if x > 1:
+                    left_good = True
+                if y < GRID_SIZE_Y-1:
+                    down_good = True
+                if y > 1:
+                    up_good = True
+                if up_good and left_good and grid[x-1][y-1] == '_':
+                    possible_positions.append([x-1, y-1])
+                if up_good and grid[x][y-1] == '_':
+                    possible_positions.append([x, y-1])
+                if right_good and up_good and grid[x+1][y-1] == '_':
+                    possible_positions.append([x+1, y-1])
+                if left_good and grid[x-1][y] == '_':
+                    possible_positions.append([x-1, y])
+                if right_good and grid[x+1][y] == '_':
+                    possible_positions.append([x+1, y])
+                if down_good and left_good and grid[x-1][y+1] == '_':
+                    possible_positions.append([x-1, y+1])
+                if down_good and grid[x][y+1] == '_':
+                    possible_positions.append([x, y+1])
+                if right_good and down_good and grid[x+1][y+1] == '_':
+                    possible_positions.append([x+1, y+1])
+    if len(possible_positions) == 0:
+        return ([GRID_SIZE_X//2, GRID_SIZE_Y//2])
+    lines = [
+        to_line_3('---xx_xx-'),
+        to_line_3('--xxx_x--'),
+        to_line_3('-xxxx_---'),
+        to_line_3('--xoo_oo-'),
+        to_line_3('-xooo_o--'),
+        to_line_3('xoooo_---'),
+        to_line_3('x-ooo_o--'),
+        to_line_3('--ooo_o--'),
+        to_line_3('-_ooo__--'),
+        to_line_3('-_ooo_---'),
+        to_line_3('--_oo_o_-'),
+        to_line_3('---oo_o_-'),
+        to_line_3('--_oo_o--'),
+    ]
+    for line_to_defo in lines:
+        for pos in possible_positions:
+            lines_to_check = []
+            for x in range(-1, 2):
+                for y in range(-1, 2):
+                    if x != 0 or y != 0:
+                        dir = (x, y)
+                        lines_to_check.append(get_line_3(
+                            grid, (pos[0]-dir[0]*5, pos[1]-dir[1]*5), 9, dir, playing_as == 'o'))
+            for line in lines_to_check:
+                if intersect_lines(line_to_defo, line):
+                    return pos
+    #stress_from_me = calculate_stress(grid, playing_as)
+    stress_from_opponent = calculate_stress(grid, playing_as)
+    cp_grid = json.loads(json.dumps(grid))
+    for pos in possible_positions:
+        cp_grid[pos[0]][pos[1]] = opponent
+        if calculate_stress(cp_grid, opponent) >= 2:
+            return pos
+        cp_grid[pos[0]][pos[1]] = '_'
+    if stress_from_opponent < 2:
+        for pos in possible_positions:
+            cp_grid[pos[0]][pos[1]] = playing_as
+            if calculate_stress(cp_grid, playing_as) >= 2:
+                return pos
+            cp_grid[pos[0]][pos[1]] = '_'
+    if playing_as == 'x':
+        maximizing_player = True
+    else:
+        maximizing_player = False
+    out = minimax(grid, 2, -100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,
+                  100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000, maximizing_player, True, get_scoregrid(grid, 4, 2), [], 4, 2)
+    return (int(out[0]), int(out[1]))
+
+
 def Kabir(grid, playing_as):
     opponent = 'x'
     if playing_as == 'x':
@@ -659,7 +749,7 @@ X_BOT = None
 O_BOT = bot_attempt_2
 
 bots = [{'name': 'Human', 'func': None}, {'name': 'Kabir', 'func': Kabir}, {'name': 'Bot 2-3',
-                                          'func': bot_attempt_2}, {'name': 'Bot 3', 'func': bot_3}, {'name': 'Bot 4', 'func': bot_4}]
+                                                                            'func': bot_attempt_2}, {'name': 'Bot 3', 'func': bot_3}, {'name': 'Bot 4', 'func': bot_4}, {'name': 'Bot 4.5', 'func': bot_5}]
 
 pygame.init()
 
@@ -826,6 +916,7 @@ o_player = -1
 x_memory = None
 o_memory = None
 
+
 def menu():
     global X_BOT
     global O_BOT
@@ -914,7 +1005,8 @@ def menu():
         screen.blit(text, (125, 125+75/2-big_font.size(txt)[1]/2))
         txt = VERSION
         text = small_font.render(txt, True, (153, 170, 181))
-        screen.blit(text, (x_size-15-small_font.size(txt)[0], y_size-15-small_font.size(txt)[1]))
+        screen.blit(text, (x_size-15-small_font.size(txt)
+                    [0], y_size-15-small_font.size(txt)[1]))
 
         pygame.display.flip()
         mouse_was_down = mouse_down
@@ -1103,7 +1195,8 @@ def main():
             screen.blit(text, (15+height_of_label, 10))
         txt = VERSION
         text = small_font.render(txt, True, (153, 170, 181))
-        screen.blit(text, (x_size-15-small_font.size(txt)[0], y_size-15-small_font.size(txt)[1]))
+        screen.blit(text, (x_size-15-small_font.size(txt)
+                    [0], y_size-15-small_font.size(txt)[1]))
         pygame.display.flip()
 
 
