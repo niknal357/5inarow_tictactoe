@@ -19,7 +19,7 @@ USABLE_AMOUNT_OF_SCREEN = 0.94
 SQUARE_PADDING = 0.05
 BOT_PLAY_DELAY = 0.1
 REPLAY_PLAY_DELAY = 1.5
-VERSION = 'v1.5'
+VERSION = 'v1.5.1'
 
 RED = (236, 65, 69)
 GREEN = (61, 165, 96)
@@ -1223,7 +1223,7 @@ def main():
                 color = RED
             else:
                 color = GREEN
-            banner_height = small_font.size(VERSION)[1]+35
+            banner_height = min(y_size*(1-USABLE_AMOUNT_OF_SCREEN-0.01), small_font.size(VERSION)[1]+35)
             pygame.draw.rect(screen, color, pygame.Rect(
                 0, y_size-banner_height, x_size, banner_height))
             # pygame.draw.rect(screen, color, pygame.Rect(
