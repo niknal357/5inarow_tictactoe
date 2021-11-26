@@ -19,7 +19,7 @@ USABLE_AMOUNT_OF_SCREEN = 0.94
 SQUARE_PADDING = 0.05
 BOT_PLAY_DELAY = 0.1
 REPLAY_PLAY_DELAY = 1.5
-VERSION = 'v1.5.2'
+VERSION = 'v1.5.3'
 
 RED = (236, 65, 69)
 GREEN = (61, 165, 96)
@@ -1061,7 +1061,10 @@ def menu():
         pygame.display.flip()
         mouse_was_down = mouse_down
 
+
 mousewasdown = True
+
+
 def main():
     global mousewasdown
     global turn_times
@@ -1229,7 +1232,8 @@ def main():
                     if strikes > 3:
                         win = '-'
         exit_button_height = int(y_size*(1-USABLE_AMOUNT_OF_SCREEN-0.02))
-        exit_button_rect = pygame.Rect(x_size-(exit_button_height*2.15), 0, exit_button_height*2.15, exit_button_height)
+        exit_button_rect = pygame.Rect(
+            x_size-(exit_button_height*2.15), 0, exit_button_height*2.15, exit_button_height)
         if exit_button_rect.collidepoint(mouse_x, mouse_y):
             color = RED_DARK
             x_color = GREY
@@ -1238,12 +1242,16 @@ def main():
         else:
             color = RED
             x_color = WHITE
-        pygame.draw.rect(screen, color, exit_button_rect, border_bottom_left_radius=10)
-        button_center_x = x_size-(exit_button_height*2.15)+(exit_button_height*2.15)/2
+        pygame.draw.rect(screen, color, exit_button_rect,
+                         border_bottom_left_radius=10)
+        button_center_x = x_size - \
+            (exit_button_height*2.15)+(exit_button_height*2.15)/2
         button_center_y = exit_button_height/2
-        x_button_length = button_center_y-4
-        pygame.draw.line(screen, x_color, (button_center_x-x_button_length, button_center_y-x_button_length), (button_center_x+x_button_length, button_center_y+x_button_length), width=2)
-        pygame.draw.line(screen, x_color, (button_center_x+x_button_length, button_center_y-x_button_length), (button_center_x-x_button_length, button_center_y+x_button_length), width=2)
+        x_button_length = button_center_y*0.7
+        pygame.draw.line(screen, x_color, (button_center_x-x_button_length, button_center_y-x_button_length),
+                         (button_center_x+x_button_length, button_center_y+x_button_length), width=2)
+        pygame.draw.line(screen, x_color, (button_center_x+x_button_length, button_center_y-x_button_length),
+                         (button_center_x-x_button_length, button_center_y+x_button_length), width=2)
         past_fpss.append(1/timediff)
         while len(past_fpss) > 120:
             past_fpss.pop(0)
@@ -1255,7 +1263,8 @@ def main():
                 color = RED
             else:
                 color = GREEN
-            banner_height = min(y_size*(1-USABLE_AMOUNT_OF_SCREEN-0.02), small_font.size(VERSION)[1]+35)
+            banner_height = min(
+                y_size*(1-USABLE_AMOUNT_OF_SCREEN-0.02), small_font.size(VERSION)[1]+35)
             pygame.draw.rect(screen, color, pygame.Rect(
                 0, y_size-banner_height, x_size, banner_height))
             # pygame.draw.rect(screen, color, pygame.Rect(
