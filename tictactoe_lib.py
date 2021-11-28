@@ -28,7 +28,7 @@ replay_playback = []
 USABLE_AMOUNT_OF_SCREEN = 0.94
 SQUARE_PADDING = 0.05
 BOT_PLAY_DELAY = 0.1
-REPLAY_PLAY_DELAY = 1.5
+REPLAY_PLAY_DELAY = 0.5
 VERSION = 'v1.8'
 
 #GRID_SIZE_X = 16*3
@@ -544,15 +544,9 @@ def bot_4(grid, playing_as):
     opponent = 'x'
     if playing_as == 'x':
         opponent = 'o'
-    possible_positions = []
-    no_go = win_elimination_depth_search(grid, playing_as, playing_as, 2, True)
-    for possible_position in get_possible_positions(grid):
-        if possible_position not in no_go:
-            possible_positions.append(possible_position)
+    possible_positions = get_possible_positions(grid)
     if len(possible_positions) == 1:
         return possible_positions[0]
-    if len(possible_positions) == 0:
-        return random.choice(get_possible_positions(grid))
     random.shuffle(possible_positions)
     lines = [
         to_line_3('---xx_xx-'),
