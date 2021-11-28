@@ -20,14 +20,16 @@ except:
         print('ujson install failed; using json...')
         import json
 
+replay_name_x = ''
+replay_name_o = ''
 replay_counter = -1
-replay = []
-
+replay = ''
+replay_playback = []
 USABLE_AMOUNT_OF_SCREEN = 0.94
 SQUARE_PADDING = 0.05
 BOT_PLAY_DELAY = 0.1
 REPLAY_PLAY_DELAY = 1.5
-VERSION = 'v1.6'
+VERSION = 'v1.7'
 
 #GRID_SIZE_X = 16*3
 #GRID_SIZE_Y = 9*3
@@ -235,16 +237,6 @@ def bot_3(grid, playing_as, return_sorted=False):
     if return_sorted:
         return positions_to_go
     return positions_to_go[-1]['pos']
-
-
-def replay_bot(grid, playing_as):
-    global win
-    global replay_counter
-    replay_counter += 1
-    a = replay[replay_counter].split(',')
-    if replay_counter+1 >= len(replay):
-        win = '-'
-    return (int(a[0]), int(a[1]))
 
 
 def get_score_of(grid, x, y, coeff1, coeff2):
