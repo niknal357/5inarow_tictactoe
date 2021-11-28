@@ -38,14 +38,21 @@ except:
         print('ujson install failed; using json...')
         import json
 
+replay_name_x = ''
+replay_name_o = ''
+
 if len(sys.argv) == 2:
     replay_file = sys.argv[1]
     with open(replay_file, 'r') as f:
-        replay = f.read().strip().split(':')
+        repl = f.read().strip()
+    replay_playback = repl.split('\n')[2].split(',')
+    print(replay_playback)
+    replay_name_x = json.loads(repl.split('\n')[0])
+    replay_name_o = json.loads(repl.split('\n')[1])
     save_replay = False
 else:
     save_replay = True
-    replay = []
+    replay = ''
 
 if save_replay:
     replay_file = str(int(time.time()))+'.replay'
@@ -64,6 +71,19 @@ O_BOT = bot_attempt_2
 
 bots = [{'name': 'Human', 'func': None}, {'name': 'Kabir', 'func': Kabir}, {'name': 'Bot 2',
                                                                             'func': bot_attempt_2}, {'name': 'Bot 3', 'func': bot_3}, {'name': 'Bot 4', 'func': bot_4}]  # {'name': 'Stress Depth', 'func': stress_depth_search}, {'name': 'Bot 5', 'func': bot_5}]
+
+
+def replay_bot(grid, playing_as):
+    global win
+    global replay_counter
+    replay_counter += 1
+    print(replay_playback)
+    print(replay_name_x)
+    print(replay_name_o)
+    a = replay_playback[replay_counter].split(':')
+    if replay_counter+1 >= len(replay_playback):
+        win = '-'
+    return (int(a[0]), int(a[1]))
 
 
 def setup():
@@ -182,6 +202,7 @@ def menu():
     global x_player
     global o_player
     global game_running
+    global replay
     running = True
     while running:
         mouse_down = pygame.mouse.get_pressed(num_buttons=3)[0]
@@ -210,6 +231,8 @@ def menu():
                 running = False
                 X_BOT = bots[x_player]['func']
                 O_BOT = bots[o_player]['func']
+                replay += json.dumps(bots[x_player]['name'])+'\n'
+                replay += json.dumps(bots[o_player]['name'])+'\n'
         pygame.draw.rect(screen, color, play_rect, width=0, border_radius=10)
         # pygame.draw.rect(screen, WHITE, play_rect,
         #                 width=2, border_radius=10)
@@ -281,6 +304,7 @@ mousewasdown = True
 
 
 def main():
+    global replay
     global mousewasdown
     global turn_times
     global game_running
@@ -388,10 +412,10 @@ def main():
                         continue
                     grid[collide_with_x][collide_with_y] = turn
                     if save_replay:
-                        replay.append(str(collide_with_x) +
-                                      ','+str(collide_with_y))
-                        # with open(replay_file, 'w') as f:
-                        #    f.write(':'.join(replay))
+                        replay += (str(collide_with_x) +
+                                   ':'+str(collide_with_y))+','
+                        with open(replay_file, 'w') as f:
+                            f.write(replay.strip(','))
                     last_x = collide_with_x
                     last_y = collide_with_y
                     scan_for_win(grid)
@@ -426,10 +450,10 @@ def main():
                             continue
                         grid[coords_to_place[0]][coords_to_place[1]] = turn
                         if save_replay:
-                            replay.append(str(coords_to_place[0]) +
-                                          ','+str(coords_to_place[1]))
-                            # with open(replay_file, 'w') as f:
-                            #    f.write(':'.join(replay))
+                            replay += (str(coords_to_place[0]) +
+                                       ':'+str(coords_to_place[1]))+','
+                            with open(replay_file, 'w') as f:
+                                f.write(replay.strip(','))
                         last_x = coords_to_place[0]
                         last_y = coords_to_place[1]
                         scan_for_win(grid)
@@ -505,9 +529,15 @@ def main():
             else:
                 txt = " has won! "
             if turn == 'x':
-                txt += '('+bots[x_player]['name']+')'
+                if save_replay:
+                    txt += '('+bots[x_player]['name']+')'
+                else:
+                    txt += '('+replay_name_x+')'
             elif turn == 'o':
-                txt += '('+bots[o_player]['name']+')'
+                if save_replay:
+                    txt += '('+bots[o_player]['name']+')'
+                else:
+                    txt += '('+replay_name_o+')'
             text = small_font.render(txt, True, WHITE)
             screen.blit(text, (25+height_of_label, 15 +
                         height_of_label/2 - small_font.size(txt)[1]/2))
