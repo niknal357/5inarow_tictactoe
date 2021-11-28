@@ -10,8 +10,8 @@ def install(package):
                           "--trusted-host", "pypi.python.org", "--trusted-host", "files.pythonhosted.org", package])
 
 
-subprocess.run(["curl", "--insecure",
-               "https://raw.githubusercontent.com/niknal357/5inarow_tictactoe/main/tictactoe_lib.py", "-o", "tictactoe_lib.py"])
+# subprocess.run(["curl", "--insecure",
+#               "https://raw.githubusercontent.com/niknal357/5inarow_tictactoe/main/tictactoe_lib.py", "-o", "tictactoe_lib.py"])
 
 if True:
     from tictactoe_lib import *
@@ -77,9 +77,6 @@ def replay_bot(grid, playing_as):
     global win
     global replay_counter
     replay_counter += 1
-    print(replay_playback)
-    print(replay_name_x)
-    print(replay_name_o)
     a = replay_playback[replay_counter].split(':')
     if replay_counter+1 >= len(replay_playback):
         win = '-'
@@ -494,6 +491,12 @@ def main():
             x_color = GREY
             if mousedown and not mousewasdown:
                 running = False
+                replay = replay.strip(',')
+                if len(replay.split('\n')) != 4:
+                    replay += '\n'+{'-': '0', 'x': '1',
+                                    'o': '2', '_': '0'}[win]
+                with open(replay_file, 'w') as f:
+                    f.write(replay)
         else:
             color = RED
             x_color = WHITE
@@ -551,6 +554,12 @@ def main():
             screen.blit(text, (10, 10))
         else:
             if win != '_':
+                replay = replay.strip(',')
+                if len(replay.split('\n')) != 4:
+                    replay += '\n'+{'-': '0', 'x': '1',
+                                    'o': '2', '_': '0'}[win]
+                    with open(replay_file, 'w') as f:
+                        f.write(replay)
                 pygame.draw.line(screen, WHITE,
                                  (win_x_1, win_y_1), (win_x_2, win_y_2), width=3)
             if turn == 'x':
