@@ -90,8 +90,12 @@ def setup():
     global grid
     global x_memory
     global o_memory
+    global hint_position_x
+    global hint_position_y
     global win, win_x_1, win_x_2, win_y_1, win_y_2
     win = '_'
+    hint_position_x = None
+    hint_position_y = None
     win_x_1 = None
     win_y_2 = None
     win_x_2 = None
@@ -110,6 +114,9 @@ if save_replay:
     next_robot_turn_allowed = time.time()+BOT_PLAY_DELAY
 else:
     next_robot_turn_allowed = time.time()+REPLAY_PLAY_DELAY
+
+hint_position_x = None
+hint_position_y = None
 
 
 def scan_for_win(grid):
@@ -305,6 +312,8 @@ mousewasdown = True
 
 
 def main():
+    global hint_position_x
+    global hint_position_y
     global replay
     global mousewasdown
     global turn_times
@@ -374,15 +383,6 @@ def main():
                     grid_coords[x][y][2]-grid_coords[x][y][0], grid_coords[x][y][3]-grid_coords[x][y][1]))
                 if square_rect.collidepoint(mouse_x, mouse_y):
                     pygame.draw.rect(screen, BACKGROUND_DARK, square_rect)
-                    #draw_width = 3
-                    # if turn == 'x' and bots[x_player]['func'] == None and grid[x][y] == '_':
-                    #    pygame.draw.line(screen, RED_DARK, (grid_coords[x][y][0], grid_coords[x][y][1]), (
-                    #        grid_coords[x][y][2], grid_coords[x][y][3]), width=draw_width)
-                    #    pygame.draw.line(screen, RED_DARK, (grid_coords[x][y][0], grid_coords[x][y][3]), (
-                    #        grid_coords[x][y][2], grid_coords[x][y][1]), width=draw_width)
-                    # if turn == 'o' and bots[o_player]['func'] == None and grid[x][y] == '_':
-                    #    pygame.draw.ellipse(
-                    #        screen, GREEN_DARK, square_rect, width=draw_width)
                     collide_with_x = x
                     collide_with_y = y
                 if x == last_x and y == last_y:
@@ -401,6 +401,17 @@ def main():
                 elif grid[x][y] == 'o':
                     pygame.draw.ellipse(
                         screen, greencolor, square_rect, width=draw_width)
+        draw_width = 2
+        if turn == 'x' and hint_position_x != None:
+            pygame.draw.line(screen, RED_DARK, (grid_coords[hint_position_x][hint_position_y][0], grid_coords[hint_position_x][hint_position_y][1]), (
+                grid_coords[hint_position_x][hint_position_y][2], grid_coords[hint_position_x][hint_position_y][3]), width=draw_width)
+            pygame.draw.line(screen, RED_DARK, (grid_coords[hint_position_x][hint_position_y][0], grid_coords[hint_position_x][hint_position_y][3]), (
+                grid_coords[hint_position_x][hint_position_y][2], grid_coords[hint_position_x][hint_position_y][1]), width=draw_width)
+        if turn == 'o' and hint_position_x != None:
+            square_rect = pygame.Rect((grid_coords[hint_position_x][hint_position_y][0], grid_coords[hint_position_x][hint_position_y][1]), (
+                grid_coords[hint_position_x][hint_position_y][2]-grid_coords[hint_position_x][hint_position_y][0], grid_coords[hint_position_x][hint_position_y][3]-grid_coords[hint_position_x][hint_position_y][1]))
+            pygame.draw.ellipse(
+                screen, GREEN_DARK, square_rect, width=draw_width)
         if win == '_':
             if turnbot == None:
                 if pygame.mouse.get_pressed(num_buttons=3)[0] or pygame.key.get_pressed()[pygame.K_RETURN]:
@@ -412,6 +423,8 @@ def main():
                     if grid[collide_with_x][collide_with_y] != '_':
                         continue
                     grid[collide_with_x][collide_with_y] = turn
+                    hint_position_x = None
+                    hint_position_y = None
                     if save_replay:
                         replay += (str(collide_with_x) +
                                    ':'+str(collide_with_y))+','
@@ -450,6 +463,8 @@ def main():
                             print(coords_to_place)
                             continue
                         grid[coords_to_place[0]][coords_to_place[1]] = turn
+                        hint_position_x = None
+                        hint_position_y = None
                         if save_replay:
                             replay += (str(coords_to_place[0]) +
                                        ':'+str(coords_to_place[1]))+','
@@ -509,6 +524,27 @@ def main():
                 0, y_size-banner_height, x_size, banner_height))
             # pygame.draw.rect(screen, color, pygame.Rect(
             #    0, 0, x_size, y_size), width=10)
+        if save_replay:
+            if (turn == 'x' and X_BOT == None) or (turn == 'o' and O_BOT == None):
+                hint_button_height = int(
+                    y_size*(1-USABLE_AMOUNT_OF_SCREEN-0.02))
+                txt = 'Hint pls'
+                hint_button_rect = pygame.Rect(
+                    0, y_size-hint_button_height-1, small_font.size(txt)[0]+20, hint_button_height+1)
+                if hint_button_rect.collidepoint(mouse_x, mouse_y):
+                    color = BACKGROUND_DARK
+                    text_color = GREY
+                    if mousedown and not mousewasdown:
+                        res = bot_4(grid, turn)
+                        hint_position_x = res[0]
+                        hint_position_y = res[1]
+                else:
+                    color = BACKGROUND
+                    text_color = WHITE
+                pygame.draw.rect(screen, color, hint_button_rect)
+                text = small_font.render(txt, True, text_color)
+                screen.blit(
+                    text, (10, y_size-hint_button_height/2-small_font.size(txt)[1]/2))
         if win == '-':
             txt = "draw!"
             text = small_font.render(txt, True, WHITE)
