@@ -540,6 +540,39 @@ def depth_search_4(grid, playing_as, placing_turn, depth, return_move=False):
         return tot/cnt
 
 
+def bot_quasi_3(grid, playing_as):
+    if playing_as == 'x':
+        opponent = 'o'
+    else:
+        opponent = 'x'
+    possible_positions = get_possible_positions(grid)
+    if len(possible_positions) == 0:
+        return (len(grid)//2, len(grid[0])//2)
+    positions_to_go = []
+    for position in possible_positions:
+        eval = eval_pos_3(grid, position, playing_as)
+        if eval == 'inf':
+            return position
+        else:
+            positions_to_go.append({'pos': position, 'val': eval})
+    positions_to_go = sorted(positions_to_go, key=lambda d: d['val'])
+    cp_grid = json.loads(json.dumps(grid))
+    opponent_stress = calculate_stress(grid, opponent)
+    if opponent_stress < 1:
+        for pos in possible_positions:
+            cp_grid[pos[0]][pos[1]] = playing_as
+            if calculate_stress(cp_grid, playing_as) >= 2:
+                return pos
+            cp_grid[pos[0]][pos[1]] = '_'
+        for pos in possible_positions:
+            cp_grid[pos[0]][pos[1]] = opponent
+            if calculate_stress(cp_grid, opponent) >= 2:
+                return pos
+            cp_grid[pos[0]][pos[1]] = '_'
+
+    return positions_to_go[-1]['pos']
+
+
 def bot_4(grid, playing_as):
     opponent = 'x'
     if playing_as == 'x':
