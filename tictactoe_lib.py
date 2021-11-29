@@ -29,7 +29,7 @@ USABLE_AMOUNT_OF_SCREEN = 0.94
 SQUARE_PADDING = 0.05
 BOT_PLAY_DELAY = 0.1
 REPLAY_PLAY_DELAY = 0.5
-VERSION = 'v1.8'
+VERSION = 'v1.8.1'
 
 #GRID_SIZE_X = 16*3
 #GRID_SIZE_Y = 9*3
@@ -145,10 +145,12 @@ def eval_line_3(line_ingrid):
         {'value': 'inf',  'line': to_line_3('---oo_oo-')},
         {'value': 'inf',  'line': to_line_3('--ooo_o--')},
         {'value': 'inf',  'line': to_line_3('xoooo_---')},
-        {'value': 9,     'line': to_line_3('-_xxx__--')},
-        {'value': 9,     'line': to_line_3('--_xx_x_-')},
-        {'value': 8,     'line': to_line_3('---oo_o--')},
-        {'value': 7,     'line': to_line_3('-_ooo_---')},
+        {'value': 'inf',  'line': to_line_3('noooo_---')},
+        {'value': 14,     'line': to_line_3('-_xxx__--')},
+        {'value': 10,     'line': to_line_3('-_xxx_n--')},
+        {'value': 14,     'line': to_line_3('--_xx_x_-')},
+        {'value': 13,     'line': to_line_3('---oo_o--')},
+        {'value': 12,     'line': to_line_3('-_ooo_---')},
         {'value': 5,     'line': to_line_3('-__xx___-')},
         {'value': 5,     'line': to_line_3('--__x_x__')},
         {'value': 4,     'line': to_line_3('-xooo__--')},
@@ -588,6 +590,7 @@ def bot_4(grid, playing_as):
         to_line_3('--xoo_oo-'),
         to_line_3('-xooo_o--'),
         to_line_3('xoooo_---'),
+        to_line_3('noooo_---'),
         to_line_3('x-ooo_o--'),
         to_line_3('--ooo_o--'),
         to_line_3('-_ooo_---'),
@@ -596,6 +599,8 @@ def bot_4(grid, playing_as):
         to_line_3('--_oo_o--'),
     ]
     for line_to_defo in lines:
+        print('---------------------------------------------------------------------------------------')
+        print(possible_positions)
         for pos in possible_positions:
             lines_to_check = []
             for x in range(-1, 2):
@@ -604,23 +609,27 @@ def bot_4(grid, playing_as):
                         dir = (x, y)
                         lines_to_check.append(get_line_3(
                             grid, (pos[0]-dir[0]*5, pos[1]-dir[1]*5), 9, dir, playing_as == 'o'))
+                        if pos[0] == 0 and pos[1] == 4:
+                            print(lines_to_check[-1], pos)
+                            print(grid)
+
             for line in lines_to_check:
                 if intersect_lines(line_to_defo, line):
+                    print(pos)
                     return pos
-    stress = calculate_stress(grid, playing_as)
+    stress = calculate_stress(grid, opponent)
     cp_grid = json.loads(json.dumps(grid))
     if stress < 1:
-        for pos in possible_positions:
-            cp_grid[pos[0]][pos[1]] = opponent
-            if calculate_stress(cp_grid, opponent) >= 2:
-                return pos
-            cp_grid[pos[0]][pos[1]] = '_'
-    elif stress < 2:
         for pos in possible_positions:
             cp_grid[pos[0]][pos[1]] = playing_as
             if calculate_stress(cp_grid, playing_as) >= 2:
                 return pos
             cp_grid[pos[0]][pos[1]] = '_'
+    for pos in possible_positions:
+        cp_grid[pos[0]][pos[1]] = opponent
+        if calculate_stress(cp_grid, opponent) >= 2:
+            return pos
+        cp_grid[pos[0]][pos[1]] = '_'
     if playing_as == 'x':
         maximizing_player = True
     else:
@@ -775,11 +784,11 @@ def get_possible_positions(grid):
                 if right_good and grid[x+1][y] == '_':
                     possible_positions.append((x+1, y))
                 if down_good and left_good and grid[x-1][y+1] == '_':
-                    possible_positions.append((x-1, y+1))
-                if down_good and grid[x][y+1] == '_':
-                    possible_positions.append((x, y+1))
-                if right_good and down_good and grid[x+1][y+1] == '_':
                     possible_positions.append((x+1, y+1))
+                if down_good and grid[x][y+1] == '_':
+                    possible_positions.append((x+1, y))
+                if right_good and down_good and grid[x+1][y+1] == '_':
+                    possible_positions.append((x+1, y-1))
     if len(possible_positions) == 0:
         return [(GRID_SIZE_X//2, GRID_SIZE_Y//2)]
     return possible_positions
