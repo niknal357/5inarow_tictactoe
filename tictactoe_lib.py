@@ -29,7 +29,7 @@ USABLE_AMOUNT_OF_SCREEN = 0.94
 SQUARE_PADDING = 0.05
 BOT_PLAY_DELAY = 0.1
 REPLAY_PLAY_DELAY = 0.5
-VERSION = 'v1.8.1'
+VERSION = 'v1.8.2'
 
 #GRID_SIZE_X = 16*3
 #GRID_SIZE_Y = 9*3
@@ -190,38 +190,7 @@ def eval_pos_3(grid, pos, playing_as):
 
 
 def bot_3(grid, playing_as, return_sorted=False):
-    possible_positions = []
-    for x in range(GRID_SIZE_X):
-        for y in range(GRID_SIZE_Y):
-            if grid[x][y] != '_':
-                left_good = False
-                right_good = False
-                up_good = False
-                down_good = False
-                if x < GRID_SIZE_X-1:
-                    right_good = True
-                if x > 1:
-                    left_good = True
-                if y < GRID_SIZE_Y-1:
-                    down_good = True
-                if y > 1:
-                    up_good = True
-                if up_good and left_good and grid[x-1][y-1] == '_':
-                    possible_positions.append([x-1, y-1])
-                if up_good and grid[x][y-1] == '_':
-                    possible_positions.append([x, y-1])
-                if right_good and up_good and grid[x+1][y-1] == '_':
-                    possible_positions.append([x+1, y-1])
-                if left_good and grid[x-1][y] == '_':
-                    possible_positions.append([x-1, y])
-                if right_good and grid[x+1][y] == '_':
-                    possible_positions.append([x+1, y])
-                if down_good and left_good and grid[x-1][y+1] == '_':
-                    possible_positions.append([x-1, y+1])
-                if down_good and grid[x][y+1] == '_':
-                    possible_positions.append([x, y+1])
-                if right_good and down_good and grid[x+1][y+1] == '_':
-                    possible_positions.append([x+1, y+1])
+    possible_positions = get_possible_positions(grid)
     if len(possible_positions) == 0:
         if return_sorted:
             return [{'pos': [GRID_SIZE_X//2, GRID_SIZE_Y//2], 'val': 0}]
@@ -599,8 +568,6 @@ def bot_4(grid, playing_as):
         to_line_3('--_oo_o--'),
     ]
     for line_to_defo in lines:
-        print('---------------------------------------------------------------------------------------')
-        print(possible_positions)
         for pos in possible_positions:
             lines_to_check = []
             for x in range(-1, 2):
@@ -609,13 +576,9 @@ def bot_4(grid, playing_as):
                         dir = (x, y)
                         lines_to_check.append(get_line_3(
                             grid, (pos[0]-dir[0]*5, pos[1]-dir[1]*5), 9, dir, playing_as == 'o'))
-                        if pos[0] == 0 and pos[1] == 4:
-                            print(lines_to_check[-1], pos)
-                            print(grid)
 
             for line in lines_to_check:
                 if intersect_lines(line_to_defo, line):
-                    print(pos)
                     return pos
     stress = calculate_stress(grid, opponent)
     cp_grid = json.loads(json.dumps(grid))
@@ -767,28 +730,36 @@ def get_possible_positions(grid):
                 down_good = False
                 if x < GRID_SIZE_X-1:
                     right_good = True
-                if x > 1:
+                if x > 0:
                     left_good = True
                 if y < GRID_SIZE_Y-1:
                     down_good = True
-                if y > 1:
+                if y > 0:
                     up_good = True
                 if up_good and left_good and grid[x-1][y-1] == '_':
-                    possible_positions.append((x-1, y-1))
+                    if (x-1, y-1) not in possible_positions:
+                        possible_positions.append((x-1, y-1))
                 if up_good and grid[x][y-1] == '_':
-                    possible_positions.append((x, y-1))
+                    if (x, y-1) not in possible_positions:
+                        possible_positions.append((x, y-1))
                 if right_good and up_good and grid[x+1][y-1] == '_':
-                    possible_positions.append((x+1, y-1))
+                    if (x+1, y-1) not in possible_positions:
+                        possible_positions.append((x+1, y-1))
                 if left_good and grid[x-1][y] == '_':
-                    possible_positions.append((x-1, y))
+                    if (x-1, y) not in possible_positions:
+                        possible_positions.append((x-1, y))
                 if right_good and grid[x+1][y] == '_':
-                    possible_positions.append((x+1, y))
+                    if (x+1, y) not in possible_positions:
+                        possible_positions.append((x+1, y))
                 if down_good and left_good and grid[x-1][y+1] == '_':
-                    possible_positions.append((x+1, y+1))
+                    if (x+1, y+1) not in possible_positions:
+                        possible_positions.append((x-1, y+1))
                 if down_good and grid[x][y+1] == '_':
-                    possible_positions.append((x+1, y))
+                    if (x, y+1) not in possible_positions:
+                        possible_positions.append((x, y+1))
                 if right_good and down_good and grid[x+1][y+1] == '_':
-                    possible_positions.append((x+1, y-1))
+                    if (x+1, y+1) not in possible_positions:
+                        possible_positions.append((x+1, y+1))
     if len(possible_positions) == 0:
         return [(GRID_SIZE_X//2, GRID_SIZE_Y//2)]
     return possible_positions
