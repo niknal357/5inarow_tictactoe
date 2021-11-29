@@ -458,6 +458,11 @@ def main():
                             print(
                                 'Error: robot ('+turn+') attempted to make to make an illegal move. ('+str(strikes)+' strikes)')
                             print(coords_to_place)
+                            for y in range(len(grid[0])):
+                                line = []
+                                for x in range(len(grid)):
+                                    line.append(grid[x][y])
+                                print(' '+' '.join(line))
                             continue
                         grid[coords_to_place[0]][coords_to_place[1]] = turn
                         hint_position_x = None
