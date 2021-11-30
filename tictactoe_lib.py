@@ -562,6 +562,8 @@ def bot_4(grid, playing_as):
         to_line_3('noooo_---'),
         to_line_3('x-ooo_o--'),
         to_line_3('--ooo_o--'),
+        to_line_3('-_xxx_---'),
+        to_line_3('--_xx_x_-'),
         to_line_3('-_ooo_---'),
         to_line_3('--_oo_o_-'),
         to_line_3('---oo_o_-'),
