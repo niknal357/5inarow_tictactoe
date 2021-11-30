@@ -29,7 +29,9 @@ USABLE_AMOUNT_OF_SCREEN = 0.94
 SQUARE_PADDING = 0.05
 BOT_PLAY_DELAY = 0.1
 REPLAY_PLAY_DELAY = 0.5
-VERSION = 'v1.8.3'
+VERSION = 'v1.8.4'
+ALLDIRS = [(-1, 1), (0, 1), (1, 1), (-1, 0),
+           (1, 0), (-1, -1), (0, -1), (1, -1)]
 
 #GRID_SIZE_X = 16*3
 #GRID_SIZE_Y = 9*3
@@ -399,7 +401,7 @@ def minimax(grid, depth, alpha, beta, maximizing_player, return_pos, original_sc
             return minEval
 
 
-def calculate_stress(grid, stress_from):
+def calculate_stress(grid, stress_from, end_on_two=False):
     #positions = get_list_of_grid(grid)
     # positions = inflate_gridlist(
     #    positions, GRID_SIZE_X-1, GRID_SIZE_Y-1, amount=2, offset_x=-3, offset_y=-3)
@@ -426,6 +428,8 @@ def calculate_stress(grid, stress_from):
                 for stress_yes in lines:
                     if intersect_lines(stress_yes['line'], line_1) or intersect_lines(stress_yes['line'], line_2):
                         total_stress += stress_yes['val']
+                    if total_stress >= 2 and end_on_two:
+                        return total_stress
     return total_stress
 
 
@@ -582,17 +586,17 @@ def bot_4(grid, playing_as):
             for line in lines_to_check:
                 if intersect_lines(line_to_defo, line):
                     return pos
-    stress = calculate_stress(grid, opponent)
+    stress = calculate_stress(grid, opponent, end_on_two=True)
     cp_grid = json.loads(json.dumps(grid))
     if stress < 1:
         for pos in possible_positions:
             cp_grid[pos[0]][pos[1]] = playing_as
-            if calculate_stress(cp_grid, playing_as) >= 2:
+            if calculate_stress(cp_grid, playing_as, end_on_two=True) >= 2:
                 return pos
             cp_grid[pos[0]][pos[1]] = '_'
     for pos in possible_positions:
         cp_grid[pos[0]][pos[1]] = opponent
-        if calculate_stress(cp_grid, opponent) >= 2:
+        if calculate_stress(cp_grid, opponent, end_on_two=True) >= 2:
             return pos
         cp_grid[pos[0]][pos[1]] = '_'
     if playing_as == 'x':
@@ -609,40 +613,8 @@ def bot_5(grid, playing_as):
     if playing_as == 'x':
         opponent = 'o'
     cp_grid = json.loads(json.dumps(grid))
-    possible_positions = []
-    for x in range(GRID_SIZE_X):
-        for y in range(GRID_SIZE_Y):
-            if grid[x][y] != '_':
-                left_good = False
-                right_good = False
-                up_good = False
-                down_good = False
-                if x < GRID_SIZE_X-1:
-                    right_good = True
-                if x > 1:
-                    left_good = True
-                if y < GRID_SIZE_Y-1:
-                    down_good = True
-                if y > 1:
-                    up_good = True
-                if up_good and left_good and grid[x-1][y-1] == '_':
-                    possible_positions.append((x-1, y-1))
-                if up_good and grid[x][y-1] == '_':
-                    possible_positions.append((x, y-1))
-                if right_good and up_good and grid[x+1][y-1] == '_':
-                    possible_positions.append((x+1, y-1))
-                if left_good and grid[x-1][y] == '_':
-                    possible_positions.append((x-1, y))
-                if right_good and grid[x+1][y] == '_':
-                    possible_positions.append((x+1, y))
-                if down_good and left_good and grid[x-1][y+1] == '_':
-                    possible_positions.append((x-1, y+1))
-                if down_good and grid[x][y+1] == '_':
-                    possible_positions.append((x, y+1))
-                if right_good and down_good and grid[x+1][y+1] == '_':
-                    possible_positions.append((x+1, y+1))
-    if len(possible_positions) == 0:
-        return (GRID_SIZE_X//2, GRID_SIZE_Y//2)
+    possible_positions = get_possible_positions(grid)
+    random.shuffle(possible_positions)
     lines = [
         to_line_3('---xx_xx-'),
         to_line_3('--xxx_x--'),
@@ -650,17 +622,16 @@ def bot_5(grid, playing_as):
         to_line_3('--xoo_oo-'),
         to_line_3('-xooo_o--'),
         to_line_3('xoooo_---'),
-        # to_line_3('x-ooo_o--'),
-        # to_line_3('--ooo_o--'),
-        # to_line_3('--_xx_x_-'),
-        # to_line_3('-_xxx__--'),
-        # to_line_3('-_ooo__--'),
-        # to_line_3('-_ooo_---'),
-        # to_line_3('--_oo_o_-'),
-        # to_line_3('---oo_o_-'),
-        # to_line_3('--_oo_o--'),
+        to_line_3('noooo_---'),
+        to_line_3('x-ooo_o--'),
+        to_line_3('--ooo_o--'),
+        to_line_3('-_xxx_---'),
+        to_line_3('--_xx_x_-'),
+        to_line_3('-_ooo_---'),
+        to_line_3('--_oo_o_-'),
+        to_line_3('---oo_o_-'),
+        to_line_3('--_oo_o--'),
     ]
-    random.shuffle(possible_positions)
     for line_to_defo in lines:
         for pos in possible_positions:
             lines_to_check = []
@@ -670,48 +641,17 @@ def bot_5(grid, playing_as):
                         dir = (x, y)
                         lines_to_check.append(get_line_3(
                             grid, (pos[0]-dir[0]*5, pos[1]-dir[1]*5), 9, dir, playing_as == 'o'))
+
             for line in lines_to_check:
                 if intersect_lines(line_to_defo, line):
                     return pos
-    #stress_from_me = calculate_stress(grid, playing_as)
-    #stress_from_opponent = calculate_stress(grid, playing_as)
-    threat_moves = []
-    threatened_moves = []
-    for pos in possible_positions:
-        cp_grid[pos[0]][pos[1]] = playing_as
-        calc = calculate_stress(cp_grid, playing_as)
-        threat_moves.append({'pos': pos, 'val': calc})
-        if calc >= 2:
-            return pos
-        cp_grid[pos[0]][pos[1]] = '_'
-    for pos in possible_positions:
-        cp_grid[pos[0]][pos[1]] = opponent
-        calc = calculate_stress(cp_grid, opponent)
-        threatened_moves.append({'pos': pos, 'val': calc})
-        cp_grid[pos[0]][pos[1]] = '_'
-    threat_moves = sorted(threat_moves, key=lambda d: d['val'])
-    threatened_moves = sorted(threatened_moves, key=lambda d: d['val'])
-    moves = []
-    if threat_moves[-1]['val'] >= 2:
-        for move in threat_moves:
-            if move['val'] == threat_moves[-1]['val']:
-                moves.append(move['pos'])
-        return random.choice(moves)
-    elif threatened_moves[-1]['val'] >= 2:
-        for move in threatened_moves:
-            if move['val'] == threatened_moves[-1]['val']:
-                moves.append(move['pos'])
-        return random.choice(moves)
-    elif threatened_moves[-1]['val'] >= 1.5:
-        for move in threatened_moves:
-            if move['val'] == threatened_moves[-1]['val']:
-                moves.append(move['pos'])
-        return random.choice(moves)
-    # elif threat_moves[-1]['val'] >= 1:
-    #    for move in threat_moves:
-    #        if move['val'] == threat_moves[-1]['val']:
-    #            moves.append(move['pos'])
-    #    return random.choice(moves)
+
+    quiq = Quiqfinder(grid, playing_as)
+    if quiq != None:
+        return quiq
+    quiq = Quiqfinder(grid, opponent)
+    if quiq != None:
+        return quiq
     if playing_as == 'x':
         maximizing_player = True
     else:
@@ -879,3 +819,41 @@ def win_elimination_depth_search(grid, playing_as, placing_as, depth, return_who
                         return no_go
         cp_grid[pos[0]][pos[1]] = '_'
     return no_go
+
+
+def invertDir(dir):
+    return (-dir[0], -dir[1])
+
+
+def dirToStr(dir):
+    return str(dir[0])+'x'+str(dir[1])
+
+
+def Quiqfinder(grid, placing_as):
+    patterns = [
+        #     placing: V
+        to_line_3('__xx___-'),
+        to_line_3('_oxx_x_-'),
+        to_line_3('oxxx___-'),
+        to_line_3('-__x_x__'),
+        to_line_3('oxx__x--'),
+        to_line_3('-oxx__x-'),
+        to_line_3('--x___x-'),
+    ]
+    for x in range(len(grid)):
+        for y in range(len(grid[0])):
+            matched = {}
+            for dir in ALLDIRS:
+                matched[dirToStr(dir)] = None
+            cnt = 0
+            for dir in ALLDIRS:
+                line = get_line_3(
+                    grid, (x-dir[0]*4, y-dir[1]*4), 8, dir, placing_as == 'o')
+                for i, pattern in enumerate(patterns):
+                    if matched[dirToStr(invertDir(dir))] != i:
+                        if intersect_lines(pattern, line):
+                            matched[dirToStr(dir)] = i
+                            cnt += 1
+                            if cnt >= 2:
+                                return (x, y)
+    return None
