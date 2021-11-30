@@ -70,7 +70,7 @@ X_BOT = None
 O_BOT = bot_attempt_2
 
 bots = [{'name': 'Human', 'func': None}, {'name': 'Kabir', 'func': Kabir}, {'name': 'Bot 2',
-                                                                            'func': bot_attempt_2}, {'name': 'Bot 3', 'func': bot_3}, {'name': 'Bot Quasi-3', 'func': bot_quasi_3}, {'name': 'Bot 4', 'func': bot_4}]  # {'name': 'Stress Depth', 'func': stress_depth_search}, {'name': 'Bot 5', 'func': bot_5}]
+                                                                            'func': bot_attempt_2}, {'name': 'Bot 3', 'func': bot_3}, {'name': 'Bot Quasi-3', 'func': bot_quasi_3}, {'name': 'Bot 4', 'func': bot_4}, {'name': 'Bot 5', 'func': bot_5}]  # {'name': 'Stress Depth', 'func': stress_depth_search}, {'name': 'Bot 5', 'func': bot_5}]
 
 
 def replay_bot(grid, playing_as):
@@ -210,6 +210,7 @@ def menu():
     global replay
     running = True
     while running:
+        keys_down = pygame.key.get_pressed()
         mouse_down = pygame.mouse.get_pressed(num_buttons=3)[0]
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -266,7 +267,10 @@ def menu():
         if x_toggle_button.collidepoint(mouse_pos[0], mouse_pos[1]):
             color = BLACK
             if mouse_down and not mouse_was_down:
-                x_player += 1
+                if keys_down[pygame.K_LSHIFT] or keys_down[pygame.K_RSHIFT] or keys_down[pygame.K_LCTRL] or keys_down[pygame.K_RCTRL]:
+                    x_player -= 1
+                else:
+                    x_player += 1
         x_player %= len(bots)
         pygame.draw.rect(screen, color, x_toggle_button,
                          width=0, border_radius=10)
@@ -283,7 +287,10 @@ def menu():
         if o_toggle_button.collidepoint(mouse_pos[0], mouse_pos[1]):
             color = BLACK
             if mouse_down and not mouse_was_down:
-                o_player += 1
+                if keys_down[pygame.K_LSHIFT] or keys_down[pygame.K_RSHIFT] or keys_down[pygame.K_LCTRL] or keys_down[pygame.K_RCTRL]:
+                    o_player -= 1
+                else:
+                    o_player += 1
         o_player %= len(bots)
         pygame.draw.rect(screen, color, o_toggle_button,
                          width=0, border_radius=10)
