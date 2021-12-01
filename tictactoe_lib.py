@@ -29,7 +29,7 @@ USABLE_AMOUNT_OF_SCREEN = 0.94
 SQUARE_PADDING = 0.05
 BOT_PLAY_DELAY = 0.1
 REPLAY_PLAY_DELAY = 0.5
-VERSION = 'v1.8.4'
+VERSION = 'v1.8.5'
 ALLDIRS = [(-1, 1), (0, 1), (1, 1), (-1, 0),
            (1, 0), (-1, -1), (0, -1), (1, -1)]
 
@@ -652,6 +652,20 @@ def bot_5(grid, playing_as):
     quiq = Quiqfinder(grid, opponent)
     if quiq != None:
         return quiq
+    for pos in get_possible_positions(grid):
+        x = pos[0]
+        y = pos[1]
+        cp_grid[x][y] = playing_as
+        if Quiqfinder(cp_grid, playing_as) != None:
+            return pos
+        cp_grid[x][y] = '_'
+    for pos in get_possible_positions(grid):
+        x = pos[0]
+        y = pos[1]
+        cp_grid[x][y] = opponent
+        if calculate_stress(cp_grid, opponent, end_on_two=True) >= 2:
+            return pos
+        cp_grid[x][y] = '_'
     if playing_as == 'x':
         maximizing_player = True
     else:
@@ -832,13 +846,28 @@ def dirToStr(dir):
 def Quiqfinder(grid, placing_as):
     patterns = [
         #     placing: V
-        to_line_3('__xx___-'),
-        to_line_3('_oxx_x_-'),
-        to_line_3('oxxx___-'),
-        to_line_3('-__x_x__'),
-        to_line_3('oxx__x--'),
-        to_line_3('-oxx__x-'),
-        to_line_3('--x___x-'),
+        to_line_3('-_xxx_o--'),
+        to_line_3('--_xx_xo-'),
+        to_line_3('---_x_xxo'),
+        to_line_3('-oxxx__--'),
+        to_line_3('-x_xx_o--'),
+        to_line_3('--x_x_xo-'),
+        to_line_3('---x__xxo'),
+        to_line_3('oxxx__---'),
+        to_line_3('-xx_x_o--'),
+        to_line_3('--xx__xo-'),
+        to_line_3('-oxx__x--'),
+        to_line_3('oxx_x_---'),
+        to_line_3('-__xx___-'),
+        to_line_3('--__x_x__'),
+        to_line_3('-_x_x__--'),
+        to_line_3('--_x__x_-'),
+        to_line_3('-_xx___--'),
+        to_line_3('_x_x___--'),
+        to_line_3('--_x___x_'),
+        to_line_3('_xx____--'),
+        to_line_3('_x__x__--'),
+        to_line_3('-_x___x_-'),
     ]
     for x in range(len(grid)):
         for y in range(len(grid[0])):
@@ -848,7 +877,7 @@ def Quiqfinder(grid, placing_as):
             cnt = 0
             for dir in ALLDIRS:
                 line = get_line_3(
-                    grid, (x-dir[0]*4, y-dir[1]*4), 8, dir, placing_as == 'o')
+                    grid, (x-dir[0]*5, y-dir[1]*5), 9, dir, placing_as == 'o')
                 for i, pattern in enumerate(patterns):
                     if matched[dirToStr(invertDir(dir))] != i:
                         if intersect_lines(pattern, line):
