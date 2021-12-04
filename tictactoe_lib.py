@@ -28,7 +28,7 @@ replay_playback = []
 USABLE_AMOUNT_OF_SCREEN = 0.94
 SQUARE_PADDING = 0.05
 BOT_PLAY_DELAY = 0.1
-REPLAY_PLAY_DELAY = 0.5
+REPLAY_PLAY_DELAY = 0.4
 VERSION = 'v1.8.5'
 ALLDIRS = [(-1, 1), (0, 1), (1, 1), (-1, 0),
            (1, 0), (-1, -1), (0, -1), (1, -1)]
@@ -652,14 +652,14 @@ def bot_5(grid, playing_as):
     quiq = Quiqfinder(grid, opponent)
     if quiq != None:
         return quiq
-    for pos in get_possible_positions(grid):
+    for pos in possible_positions:
         x = pos[0]
         y = pos[1]
         cp_grid[x][y] = playing_as
         if Quiqfinder(cp_grid, playing_as) != None:
             return pos
         cp_grid[x][y] = '_'
-    for pos in get_possible_positions(grid):
+    for pos in possible_positions:
         x = pos[0]
         y = pos[1]
         cp_grid[x][y] = opponent
@@ -869,8 +869,12 @@ def Quiqfinder(grid, placing_as):
         to_line_3('_x__x__--'),
         to_line_3('-_x___x_-'),
     ]
-    for x in range(len(grid)):
-        for y in range(len(grid[0])):
+    x_s = list(range(len(grid)))
+    y_s = list(range(len(grid[0])))
+    random.shuffle(x_s)
+    random.shuffle(y_s)
+    for x in x_s:
+        for y in y_s:
             matched = {}
             for dir in ALLDIRS:
                 matched[dirToStr(dir)] = None
