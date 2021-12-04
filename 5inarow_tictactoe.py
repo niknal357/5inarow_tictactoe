@@ -10,7 +10,8 @@ def install(package):
                           "--trusted-host", "pypi.python.org", "--trusted-host", "files.pythonhosted.org", package])
 
 
-subprocess.run(["curl", "--insecure", "https://raw.githubusercontent.com/niknal357/5inarow_tictactoe/main/tictactoe_lib.py", "-o", "tictactoe_lib.py"])
+subprocess.run(["curl", "--insecure",
+               "https://raw.githubusercontent.com/niknal357/5inarow_tictactoe/main/tictactoe_lib.py", "-o", "tictactoe_lib.py"])
 
 if True:
     from tictactoe_lib import *
@@ -441,6 +442,14 @@ def main():
                             turn = 'o'
                         else:
                             turn = 'x'
+                    else:
+                        replay = replay.strip(',')
+                        if len(replay.split('\n')) != 4:
+                            replay += '\n'+{'-': '0', 'x': '1',
+                                            'o': '2'}[win]
+                            if save_replay:
+                                with open(replay_file, 'w') as f:
+                                    f.write(replay)
                     if save_replay:
                         next_robot_turn_allowed = time.time()+BOT_PLAY_DELAY
                     else:
@@ -476,8 +485,8 @@ def main():
                         if save_replay:
                             replay += (str(coords_to_place[0]) +
                                        ':'+str(coords_to_place[1]))+','
-                            with open(replay_file, 'w') as f:
-                                f.write(replay.strip(','))
+                            # with open(replay_file, 'w') as f:
+                            #    f.write(replay.strip(','))
                         last_x = coords_to_place[0]
                         last_y = coords_to_place[1]
                         scan_for_win(grid)
@@ -506,8 +515,9 @@ def main():
                 if len(replay.split('\n')) != 4:
                     replay += '\n'+{'-': '0', 'x': '1',
                                     'o': '2', '_': '0'}[win]
-                with open(replay_file, 'w') as f:
-                    f.write(replay)
+                if save_replay:
+                    with open(replay_file, 'w') as f:
+                        f.write(replay)
         else:
             color = RED
             x_color = WHITE
@@ -549,7 +559,7 @@ def main():
                     color = BACKGROUND_DARK
                     text_color = GREY
                     if mousedown and not mousewasdown:
-                        res = bot_4(grid, turn)
+                        res = bot_5(grid, turn)
                         hint_position_x = res[0]
                         hint_position_y = res[1]
                 else:
@@ -565,12 +575,6 @@ def main():
             screen.blit(text, (10, 10))
         else:
             if win != '_':
-                replay = replay.strip(',')
-                if len(replay.split('\n')) != 4:
-                    replay += '\n'+{'-': '0', 'x': '1',
-                                    'o': '2', '_': '0'}[win]
-                    with open(replay_file, 'w') as f:
-                        f.write(replay)
                 pygame.draw.line(screen, WHITE,
                                  (win_x_1, win_y_1), (win_x_2, win_y_2), width=3)
             if turn == 'x':
