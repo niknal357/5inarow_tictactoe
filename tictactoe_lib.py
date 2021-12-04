@@ -845,7 +845,7 @@ def dirToStr(dir):
 
 def Quiqfinder(grid, placing_as):
     patterns = [
-        #     placing: V
+        #      placing: V
         to_line_3('-_xxx_o--'),
         to_line_3('--_xx_xo-'),
         to_line_3('---_x_xxo'),
