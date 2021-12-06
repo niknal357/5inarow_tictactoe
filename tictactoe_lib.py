@@ -20,6 +20,9 @@ except:
         print('ujson install failed; using json...')
         import json
 
+x_mem = None
+o_mem = None
+
 replay_name_x = ''
 replay_name_o = ''
 replay_counter = -1
@@ -974,4 +977,53 @@ def bot_proto_6(grid, playing_as):
             positions_to_go.append(pos['pos'])
         else:
             break
+    return random.choice(positions_to_go)
+
+
+def over_dedicated_bot(grid, playing_as):
+    if playing_as == 'x':
+        global x_mem
+        my_mem = x_mem
+    if playing_as == 'o':
+        global o_mem
+        my_mem = o_mem
+    if my_mem != None:
+        for i in range(5):
+            pos_x = my_mem['start_x']+my_mem['dir_x']*i
+            pos_y = my_mem['start_y']+my_mem['dir_y']*i
+            if get_of_grid_3(grid, (pos_x, pos_y)) not in [playing_as, '_']:
+                my_mem = None
+                break
+    if my_mem == None:
+        fives = []
+        for x in range(len(grid)):
+            for y in range(len(grid[0])):
+                for dir in [(1, 1), (1, 0), (1, -1), (0, -1)]:
+                    line = get_line_3(grid, (x, y), 5, dir, False)
+                    x_count = 0
+                    cnt = 0
+                    for element in line:
+                        if element == playing_as:
+                            x_count += 1
+                            cnt += 1
+                            continue
+                        elif element == '_':
+                            cnt += 1
+                            continue
+                        else:
+                            break
+                    if cnt == 5 and x_count != 0:
+                        # print('yes')
+                        fives.append(
+                            {'start_x': x, 'start_y': y, 'dir_x': dir[0], 'dir_y': dir[1], 'val': x_count})
+        if len(fives) == 0:
+            return random.choice(get_possible_positions(grid))
+        fives = sorted(fives, key=lambda d: d['val'])
+        my_mem = fives[-1]
+    positions_to_go = []
+    for i in range(5):
+        pos_x = my_mem['start_x']+my_mem['dir_x']*i
+        pos_y = my_mem['start_y']+my_mem['dir_y']*i
+        if get_of_grid_3(grid, (pos_x, pos_y)) == '_':
+            positions_to_go.append((pos_x, pos_y))
     return random.choice(positions_to_go)
