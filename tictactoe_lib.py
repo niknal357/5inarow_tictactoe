@@ -27,7 +27,7 @@ replay = ''
 replay_playback = []
 USABLE_AMOUNT_OF_SCREEN = 0.94
 SQUARE_PADDING = 0.05
-BOT_PLAY_DELAY = 0.1
+BOT_PLAY_DELAY = 0.05
 REPLAY_PLAY_DELAY = 0.4
 VERSION = 'v1.8.5'
 ALLDIRS = [(-1, 1), (0, 1), (1, 1), (-1, 0),
@@ -890,3 +890,88 @@ def Quiqfinder(grid, placing_as):
                             if cnt >= 2:
                                 return (x, y)
     return None
+
+
+def calculate_grid_intersection_values(grid, calculating_for):
+    value_grid = []
+    for x in range(len(grid)):
+        value_grid.append([1]*len(grid[0]))
+    for x in range(len(grid)):
+        for y in range(len(grid[0])):
+            for dir in [(1, 1), (1, 0), (1, -1), (0, -1)]:
+                line = get_line_3(grid, (x, y), 5, dir, False)
+                x_count = 1
+                cnt = 0
+                for element in line:
+                    if element == calculating_for:
+                        x_count += 1
+                        cnt += 1
+                        continue
+                    elif element == '_':
+                        cnt += 1
+                        continue
+                    else:
+                        break
+                if cnt == 5 and x_count != 0:
+                    for i in range(5):
+                        if line[i] == '_':
+                            value_grid[x+dir[0]*i][y+dir[1]*i] *= x_count
+                            value_grid[x+dir[0]*i][y+dir[1]*i] *= x_count
+                        else:
+                            value_grid[x+dir[0]*i][y+dir[1]*i] = 0
+    return value_grid
+
+
+def bot_proto_6(grid, playing_as):
+    opponent = 'x'
+    if playing_as == 'x':
+        opponent = 'o'
+    cp_grid = json.loads(json.dumps(grid))
+    possible_positions = get_possible_positions(grid)
+    random.shuffle(possible_positions)
+    lines = [
+        to_line_3('---xx_xx-'),
+        to_line_3('--xxx_x--'),
+        to_line_3('-xxxx_---'),
+        to_line_3('--xoo_oo-'),
+        to_line_3('-xooo_o--'),
+        to_line_3('xoooo_---'),
+        to_line_3('noooo_---'),
+        to_line_3('x-ooo_o--'),
+        to_line_3('--ooo_o--'),
+        to_line_3('-_xxx_---'),
+        to_line_3('--_xx_x_-'),
+        to_line_3('-_ooo_---'),
+        to_line_3('--_oo_o_-'),
+        to_line_3('---oo_o_-'),
+        to_line_3('--_oo_o--'),
+    ]
+    for line_to_defo in lines:
+        for pos in possible_positions:
+            lines_to_check = []
+            for x in range(-1, 2):
+                for y in range(-1, 2):
+                    if x != 0 or y != 0:
+                        dir = (x, y)
+                        lines_to_check.append(get_line_3(
+                            grid, (pos[0]-dir[0]*5, pos[1]-dir[1]*5), 9, dir, playing_as == 'o'))
+
+            for line in lines_to_check:
+                if intersect_lines(line_to_defo, line):
+                    return pos
+    poss = []
+    for x, line in enumerate(calculate_grid_intersection_values(grid, 'x')):
+        for y, col in enumerate(line):
+            poss.append({'pos': (x, y), 'val': col})
+    for x, line in enumerate(calculate_grid_intersection_values(grid, 'o')):
+        for y, col in enumerate(line):
+            poss.append({'pos': (x, y), 'val': col})
+    poss = sorted(poss, key=lambda d: d['val'])
+    poss.reverse()
+    positions_to_go = []
+    for pos in poss:
+        if pos['val'] >= poss[0]['val']:
+            positions_to_go.append(pos['pos'])
+        else:
+            break
+    return random.choice(positions_to_go)
