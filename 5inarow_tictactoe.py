@@ -72,7 +72,7 @@ X_BOT = None
 O_BOT = bot_attempt_2
 
 bots = [{'name': 'Human', 'func': None}, {'name': 'Kabir', 'func': Kabir}, {'name': 'Bot 2',
-                                                                            'func': bot_attempt_2}, {'name': 'Bot 3', 'func': bot_3}, {'name': 'Bot 3.1', 'func': bot_quasi_3}, {'name': 'Bot 4', 'func': bot_4}, {'name': 'Bot 5', 'func': bot_5}, {'name': 'Bot 6 (Prototype -> not good)', 'func': bot_proto_6}]  # {'name': 'Stress Depth', 'func': stress_depth_search}, {'name': 'Bot 5', 'func': bot_5}]
+                                                                            'func': bot_attempt_2}, {'name': 'Bot 3', 'func': bot_3}, {'name': 'Bot 3.1', 'func': bot_quasi_3}, {'name': 'Bot 4', 'func': bot_4}, {'name': 'Bot 5', 'func': bot_5}, {'name': 'Bot 6 (Prototype -> not good)', 'func': bot_proto_6}, {'name': 'Over-dedicated', 'func': over_dedicated_bot}]  # {'name': 'Stress Depth', 'func': stress_depth_search}, {'name': 'Bot 5', 'func': bot_5}]
 
 
 def replay_bot(grid, playing_as):
@@ -92,6 +92,10 @@ def setup():
     global hint_position_x
     global hint_position_y
     global win, win_x_1, win_x_2, win_y_1, win_y_2
+    global x_mem
+    global o_mem
+    x_mem = None
+    o_mem = None
     win = '_'
     hint_position_x = None
     hint_position_y = None
@@ -197,7 +201,7 @@ if not save_replay:
 
 game_running = True
 x_player = 0
-o_player = -2
+o_player = -3
 
 x_memory = None
 o_memory = None
