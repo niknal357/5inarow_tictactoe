@@ -10,6 +10,8 @@ def install(package):
                           "--trusted-host", "pypi.python.org", "--trusted-host", "files.pythonhosted.org", package])
 
 
+DEBUG_RENDERING = False
+
 subprocess.run(["curl", "--insecure",
                "https://raw.githubusercontent.com/niknal357/5inarow_tictactoe/main/tictactoe_lib.py", "-o", "tictactoe_lib.py"])
 
@@ -70,7 +72,7 @@ X_BOT = None
 O_BOT = bot_attempt_2
 
 bots = [{'name': 'Human', 'func': None}, {'name': 'Kabir', 'func': Kabir}, {'name': 'Bot 2',
-                                                                            'func': bot_attempt_2}, {'name': 'Bot 3', 'func': bot_3}, {'name': 'Bot Quasi-3', 'func': bot_quasi_3}, {'name': 'Bot 4', 'func': bot_4}, {'name': 'Bot 5', 'func': bot_5}]  # {'name': 'Stress Depth', 'func': stress_depth_search}, {'name': 'Bot 5', 'func': bot_5}]
+                                                                            'func': bot_attempt_2}, {'name': 'Bot 3', 'func': bot_3}, {'name': 'Bot 3.1', 'func': bot_quasi_3}, {'name': 'Bot 4', 'func': bot_4}, {'name': 'Bot 5', 'func': bot_5}, {'name': 'Bot 6 (Prototype -> not good)', 'func': bot_proto_6}]  # {'name': 'Stress Depth', 'func': stress_depth_search}, {'name': 'Bot 5', 'func': bot_5}]
 
 
 def replay_bot(grid, playing_as):
@@ -195,7 +197,7 @@ if not save_replay:
 
 game_running = True
 x_player = 0
-o_player = -1
+o_player = -2
 
 x_memory = None
 o_memory = None
@@ -332,6 +334,9 @@ def main():
     global last_y
     global x_memory
     global o_memory
+    if DEBUG_RENDERING:
+        render_grid_x = calculate_grid_intersection_values(grid, 'x')
+        render_grid_o = calculate_grid_intersection_values(grid, 'o')
     running = True
     prevframe = time.time()
     past_fpss = []
@@ -405,6 +410,19 @@ def main():
                 elif grid[x][y] == 'o':
                     pygame.draw.ellipse(
                         screen, greencolor, square_rect, width=draw_width)
+                elif DEBUG_RENDERING:
+                    txt = str(max(render_grid_x[x][y], render_grid_o[x][y]))
+                    text = small_font.render(txt, True, WHITE)
+                    screen.blit(
+                        text, (grid_coords[x][y][0], grid_coords[x][y][1]))
+                    #txt = str(render_grid_x[x][y])
+                    #text = small_font.render(txt, True, RED)
+                    # screen.blit(
+                    #    text, (grid_coords[x][y][0], grid_coords[x][y][1]))
+                    #txt = str(render_grid_o[x][y])
+                    #text = small_font.render(txt, True, GREEN)
+                    # screen.blit(
+                    #    text, (grid_coords[x][y][2]-small_font.size(txt)[0], grid_coords[x][y][3]-small_font.size(txt)[1]))
         draw_width = 2
         if turn == 'x' and hint_position_x != None:
             pygame.draw.line(screen, RED_DARK, (grid_coords[hint_position_x][hint_position_y][0], grid_coords[hint_position_x][hint_position_y][1]), (
@@ -427,6 +445,11 @@ def main():
                     if grid[collide_with_x][collide_with_y] != '_':
                         continue
                     grid[collide_with_x][collide_with_y] = turn
+                    if DEBUG_RENDERING:
+                        render_grid_x = calculate_grid_intersection_values(
+                            grid, 'x')
+                        render_grid_o = calculate_grid_intersection_values(
+                            grid, 'o')
                     hint_position_x = None
                     hint_position_y = None
                     if save_replay:
@@ -480,6 +503,11 @@ def main():
                                 print(' '+' '.join(line))
                             continue
                         grid[coords_to_place[0]][coords_to_place[1]] = turn
+                        if DEBUG_RENDERING:
+                            render_grid_x = calculate_grid_intersection_values(
+                                grid, 'x')
+                            render_grid_o = calculate_grid_intersection_values(
+                                grid, 'o')
                         hint_position_x = None
                         hint_position_y = None
                         if save_replay:
