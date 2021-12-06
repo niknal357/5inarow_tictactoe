@@ -981,6 +981,42 @@ def bot_proto_6(grid, playing_as):
 
 
 def over_dedicated_bot(grid, playing_as):
+    opponent = 'x'
+    if playing_as == 'x':
+        opponent = 'o'
+    cp_grid = json.loads(json.dumps(grid))
+    possible_positions = get_possible_positions(grid)
+    random.shuffle(possible_positions)
+    lines = [
+        to_line_3('---xx_xx-'),
+        to_line_3('--xxx_x--'),
+        to_line_3('-xxxx_---'),
+        to_line_3('--xoo_oo-'),
+        to_line_3('-xooo_o--'),
+        to_line_3('xoooo_---'),
+        to_line_3('noooo_---'),
+        to_line_3('x-ooo_o--'),
+        to_line_3('--ooo_o--'),
+        to_line_3('-_xxx_---'),
+        to_line_3('--_xx_x_-'),
+        to_line_3('-_ooo_---'),
+        to_line_3('--_oo_o_-'),
+        to_line_3('---oo_o_-'),
+        to_line_3('--_oo_o--'),
+    ]
+    for line_to_defo in lines:
+        for pos in possible_positions:
+            lines_to_check = []
+            for x in range(-1, 2):
+                for y in range(-1, 2):
+                    if x != 0 or y != 0:
+                        dir = (x, y)
+                        lines_to_check.append(get_line_3(
+                            grid, (pos[0]-dir[0]*5, pos[1]-dir[1]*5), 9, dir, playing_as == 'o'))
+
+            for line in lines_to_check:
+                if intersect_lines(line_to_defo, line):
+                    return pos
     if playing_as == 'x':
         global x_mem
         my_mem = x_mem
