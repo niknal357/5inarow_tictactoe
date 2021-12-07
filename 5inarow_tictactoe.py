@@ -370,20 +370,28 @@ def main():
                     running = False
                 if event.key == pygame.K_UP:
                     if collide_with_y != None:
-                        pygame.mouse.set_pos(grid_coords[collide_with_x][collide_with_y-1][0]/2+grid_coords[collide_with_x][collide_with_y-1]
-                                             [2]/2, grid_coords[collide_with_x][collide_with_y-1][1]/2+grid_coords[collide_with_x][collide_with_y-1][3]/2)
+                        try:
+                            pygame.mouse.set_pos(grid_coords[collide_with_x][collide_with_y-1][0]/2+grid_coords[collide_with_x][collide_with_y-1]
+                                                [2]/2, grid_coords[collide_with_x][collide_with_y-1][1]/2+grid_coords[collide_with_x][collide_with_y-1][3]/2)
+                        except: pass
                 if event.key == pygame.K_DOWN:
                     if collide_with_y != None:
-                        pygame.mouse.set_pos(grid_coords[collide_with_x][collide_with_y+1][0]/2+grid_coords[collide_with_x][collide_with_y+1]
-                                             [2]/2, grid_coords[collide_with_x][collide_with_y+1][1]/2+grid_coords[collide_with_x][collide_with_y+1][3]/2)
+                        try:
+                            pygame.mouse.set_pos(grid_coords[collide_with_x][collide_with_y+1][0]/2+grid_coords[collide_with_x][collide_with_y+1]
+                                                [2]/2, grid_coords[collide_with_x][collide_with_y+1][1]/2+grid_coords[collide_with_x][collide_with_y+1][3]/2)
+                        except: pass
                 if event.key == pygame.K_LEFT:
                     if collide_with_y != None:
-                        pygame.mouse.set_pos(grid_coords[collide_with_x-1][collide_with_y][0]/2+grid_coords[collide_with_x-1][collide_with_y]
-                                             [2]/2, grid_coords[collide_with_x-1][collide_with_y][1]/2+grid_coords[collide_with_x-1][collide_with_y][3]/2)
+                        try:
+                            pygame.mouse.set_pos(grid_coords[collide_with_x-1][collide_with_y][0]/2+grid_coords[collide_with_x-1][collide_with_y]
+                                                [2]/2, grid_coords[collide_with_x-1][collide_with_y][1]/2+grid_coords[collide_with_x-1][collide_with_y][3]/2)
+                        except: pass
                 if event.key == pygame.K_RIGHT:
                     if collide_with_y != None:
-                        pygame.mouse.set_pos(grid_coords[collide_with_x+1][collide_with_y][0]/2+grid_coords[collide_with_x+1][collide_with_y]
-                                             [2]/2, grid_coords[collide_with_x+1][collide_with_y][1]/2+grid_coords[collide_with_x+1][collide_with_y][3]/2)
+                        try:
+                            pygame.mouse.set_pos(grid_coords[collide_with_x+1][collide_with_y][0]/2+grid_coords[collide_with_x+1][collide_with_y]
+                                                [2]/2, grid_coords[collide_with_x+1][collide_with_y][1]/2+grid_coords[collide_with_x+1][collide_with_y][3]/2)
+                        except: pass
         screen.fill(BACKGROUND)
         for line in vert_lines:
             pygame.draw.line(screen, GREY, (line, y_size /
