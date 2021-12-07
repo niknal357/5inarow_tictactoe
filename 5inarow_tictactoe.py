@@ -82,7 +82,7 @@ def replay_bot(grid, playing_as):
     a = replay_playback[replay_counter].split(':')
     if replay_counter+1 >= len(replay_playback):
         win = '-'
-    return (int(a[0]), int(a[1]))
+    yield (int(a[0]), int(a[1]))
 
 
 def setup():
