@@ -72,7 +72,7 @@ X_BOT = None
 O_BOT = bot_attempt_2
 
 bots = [{'name': 'Human', 'func': None}, {'name': 'Kabir', 'func': Kabir}, {'name': 'Bot 2',
-                                                                            'func': bot_attempt_2}, {'name': 'Bot 3', 'func': bot_3}, {'name': 'Bot 3.1', 'func': bot_quasi_3}, {'name': 'Bot 4', 'func': bot_4}, {'name': 'Bot 5', 'func': bot_5}, {'name': 'Bot 6 (Prototype -> not good)', 'func': bot_proto_6}, {'name': 'Over-dedicated', 'func': over_dedicated_bot}]  # {'name': 'Stress Depth', 'func': stress_depth_search}, {'name': 'Bot 5', 'func': bot_5}]
+                                                                            'func': bot_attempt_2}, {'name': 'Bot 3', 'func': bot_3}, {'name': 'Bot 3.1', 'func': bot_quasi_3}, {'name': 'Bot 4', 'func': bot_4}, {'name': 'Bot 5', 'func': bot_5}, {'name': 'Bot 6 (Prototype -> not good)', 'func': bot_proto_6}, {'name': 'Over-dedicated', 'func': over_dedicated_bot}, {'name': 'Easy Bot', 'func': easy_bot}]  # {'name': 'Stress Depth', 'func': stress_depth_search}, {'name': 'Bot 5', 'func': bot_5}]
 
 
 def replay_bot(grid, playing_as):
@@ -86,6 +86,7 @@ def replay_bot(grid, playing_as):
 
 
 def setup():
+    global bot_generator
     global grid
     global x_memory
     global o_memory
@@ -94,6 +95,7 @@ def setup():
     global win, win_x_1, win_x_2, win_y_1, win_y_2
     global x_mem
     global o_mem
+    bot_generator = None
     x_mem = None
     o_mem = None
     win = '_'
@@ -201,11 +203,12 @@ if not save_replay:
 
 game_running = True
 x_player = 0
-o_player = -3
+o_player = -4
 
 x_memory = None
 o_memory = None
 
+bot_generator = None
 
 def menu():
     global X_BOT
@@ -322,6 +325,7 @@ mousewasdown = True
 
 
 def main():
+    global bot_generator
     global hint_position_x
     global hint_position_y
     global replay
@@ -486,27 +490,20 @@ def main():
                     clicklock = False
             else:
                 if next_robot_turn_allowed <= time.time():
-                    turn_num += 1
-                    strikes = 0
-                    while strikes < 4:
-                        robot_calc_start_time = time.time()
-                        coords_to_place = turnbot(grid, turn)
-                        turn_times.append(time.time()-robot_calc_start_time)
-                        avg = 0
-                        for tim in turn_times:
-                            avg += tim
+                    if bot_generator == None:
+                        bot_generator = turnbot(grid, turn)
+                    res = next(bot_generator)
+                    if res != None:
+                        coords_to_place = res
+                        bot_generator = None
+                        turn_num += 1
                         if grid[coords_to_place[0]][coords_to_place[1]] != '_':
-                            strikes += 1
                             print(
                                 'Error: robot ('+turn+') attempted to make to make an illegal move. ('+str(strikes)+' strikes)')
                             print(coords_to_place)
-                            for y in range(len(grid[0])):
-                                line = []
-                                for x in range(len(grid)):
-                                    line.append(grid[x][y])
-                                print(' '+' '.join(line))
-                            continue
-                        grid[coords_to_place[0]][coords_to_place[1]] = turn
+                            win = '-'
+                        else:
+                            grid[coords_to_place[0]][coords_to_place[1]] = turn
                         if DEBUG_RENDERING:
                             render_grid_x = calculate_grid_intersection_values(
                                 grid, 'x')
@@ -516,9 +513,7 @@ def main():
                         hint_position_y = None
                         if save_replay:
                             replay += (str(coords_to_place[0]) +
-                                       ':'+str(coords_to_place[1]))+','
-                            # with open(replay_file, 'w') as f:
-                            #    f.write(replay.strip(','))
+                                    ':'+str(coords_to_place[1]))+','
                         last_x = coords_to_place[0]
                         last_y = coords_to_place[1]
                         scan_for_win(grid)
@@ -528,13 +523,10 @@ def main():
                                 turn = 'o'
                             else:
                                 turn = 'x'
-                        break
-                    if save_replay:
-                        next_robot_turn_allowed = time.time()+BOT_PLAY_DELAY
-                    else:
-                        next_robot_turn_allowed = time.time()+REPLAY_PLAY_DELAY
-                    if strikes > 3:
-                        win = '-'
+                        if save_replay:
+                            next_robot_turn_allowed = time.time()+BOT_PLAY_DELAY
+                        else:
+                            next_robot_turn_allowed = time.time()+REPLAY_PLAY_DELAY
         exit_button_height = int(y_size*(1-USABLE_AMOUNT_OF_SCREEN-0.02))
         exit_button_rect = pygame.Rect(
             x_size-(exit_button_height*2.15), 0, exit_button_height*2.15, exit_button_height)
