@@ -32,7 +32,7 @@ USABLE_AMOUNT_OF_SCREEN = 0.94
 SQUARE_PADDING = 0.05
 BOT_PLAY_DELAY = 0.05
 REPLAY_PLAY_DELAY = 0.4
-VERSION = 'v1.9'
+VERSION = 'v2.0'
 ALLDIRS = [(-1, 1), (0, 1), (1, 1), (-1, 0),
            (1, 0), (-1, -1), (0, -1), (1, -1)]
 
@@ -198,21 +198,21 @@ def bot_3(grid, playing_as, return_sorted=False):
     possible_positions = get_possible_positions(grid)
     if len(possible_positions) == 0:
         if return_sorted:
-            return [{'pos': [GRID_SIZE_X//2, GRID_SIZE_Y//2], 'val': 0}]
-        return ([GRID_SIZE_X//2, GRID_SIZE_Y//2])
+            yield [{'pos': [GRID_SIZE_X//2, GRID_SIZE_Y//2], 'val': 0}]
+        yield ([GRID_SIZE_X//2, GRID_SIZE_Y//2])
     positions_to_go = []
     for position in possible_positions:
         eval = eval_pos_3(grid, position, playing_as)
         if eval == 'inf':
             if return_sorted:
-                return [{'pos': position, 'val': 100000000000000000000000000000000}]
-            return position
+                yield [{'pos': position, 'val': 100000000000000000000000000000000}]
+            yield position
         else:
             positions_to_go.append({'pos': position, 'val': eval})
     positions_to_go = sorted(positions_to_go, key=lambda d: d['val'])
     if return_sorted:
-        return positions_to_go
-    return positions_to_go[-1]['pos']
+        yield positions_to_go
+    yield positions_to_go[-1]['pos']
 
 
 def get_score_of(grid, x, y, coeff1, coeff2):
@@ -348,9 +348,10 @@ def bot_attempt_2(grid, playing_as):
         maximizing_player = True
     else:
         maximizing_player = False
+    yield
     out = minimax(grid, 2, -100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,
                   100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000, maximizing_player, True, get_scoregrid(grid, 4, 2), [], 4, 2)
-    return (int(out[0]), int(out[1]))
+    yield (int(out[0]), int(out[1]))
 
 
 def minimax(grid, depth, alpha, beta, maximizing_player, return_pos, original_scoregrid, placements, coeff1, coeff2):
@@ -359,7 +360,7 @@ def minimax(grid, depth, alpha, beta, maximizing_player, return_pos, original_sc
     playing_as = 'o'
     if maximizing_player:
         playing_as = 'x'
-    possible_positions_with_val = bot_3(grid, playing_as, return_sorted=True)
+    possible_positions_with_val = next(bot_3(grid, playing_as, return_sorted=True))
     possible_positions = []
     for pos in possible_positions_with_val:
         possible_positions.append(pos['pos'])
@@ -525,12 +526,13 @@ def bot_quasi_3(grid, playing_as):
         opponent = 'x'
     possible_positions = get_possible_positions(grid)
     if len(possible_positions) == 0:
-        return (len(grid)//2, len(grid[0])//2)
+        yield (len(grid)//2, len(grid[0])//2)
     positions_to_go = []
     for position in possible_positions:
+        yield
         eval = eval_pos_3(grid, position, playing_as)
         if eval == 'inf':
-            return position
+            yield position
         else:
             positions_to_go.append({'pos': position, 'val': eval})
     positions_to_go = sorted(positions_to_go, key=lambda d: d['val'])
@@ -538,17 +540,19 @@ def bot_quasi_3(grid, playing_as):
     opponent_stress = calculate_stress(grid, opponent)
     if opponent_stress < 1:
         for pos in possible_positions:
+            yield
             cp_grid[pos[0]][pos[1]] = playing_as
             if calculate_stress(cp_grid, playing_as) >= 2:
-                return pos
+                yield pos
             cp_grid[pos[0]][pos[1]] = '_'
         for pos in possible_positions:
+            yield
             cp_grid[pos[0]][pos[1]] = opponent
             if calculate_stress(cp_grid, opponent) >= 2:
-                return pos
+                yield pos
             cp_grid[pos[0]][pos[1]] = '_'
 
-    return positions_to_go[-1]['pos']
+    yield positions_to_go[-1]['pos']
 
 
 def bot_4(grid, playing_as):
@@ -557,7 +561,7 @@ def bot_4(grid, playing_as):
         opponent = 'o'
     possible_positions = get_possible_positions(grid)
     if len(possible_positions) == 1:
-        return possible_positions[0]
+        yield possible_positions[0]
     random.shuffle(possible_positions)
     lines = [
         to_line_3('---xx_xx-'),
@@ -588,27 +592,30 @@ def bot_4(grid, playing_as):
 
             for line in lines_to_check:
                 if intersect_lines(line_to_defo, line):
-                    return pos
+                    yield pos
     stress = calculate_stress(grid, opponent, end_on_two=True)
     cp_grid = json.loads(json.dumps(grid))
     if stress < 1:
         for pos in possible_positions:
+            yield
             cp_grid[pos[0]][pos[1]] = playing_as
             if calculate_stress(cp_grid, playing_as, end_on_two=True) >= 2:
-                return pos
+                yield pos
             cp_grid[pos[0]][pos[1]] = '_'
     for pos in possible_positions:
+        yield
         cp_grid[pos[0]][pos[1]] = opponent
         if calculate_stress(cp_grid, opponent, end_on_two=True) >= 2:
-            return pos
+            yield pos
         cp_grid[pos[0]][pos[1]] = '_'
     if playing_as == 'x':
         maximizing_player = True
     else:
         maximizing_player = False
+    yield
     out = minimax(grid, 2, -100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,
                   100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000, maximizing_player, True, get_scoregrid(grid, 4, 2), [], 4, 2)
-    return (int(out[0]), int(out[1]))
+    yield (int(out[0]), int(out[1]))
 
 
 def bot_5(grid, playing_as):
@@ -639,6 +646,7 @@ def bot_5(grid, playing_as):
         for pos in possible_positions:
             lines_to_check = []
             for x in range(-1, 2):
+                yield
                 for y in range(-1, 2):
                     if x != 0 or y != 0:
                         dir = (x, y)
@@ -647,35 +655,39 @@ def bot_5(grid, playing_as):
 
             for line in lines_to_check:
                 if intersect_lines(line_to_defo, line):
-                    return pos
-
+                    yield pos
+    yield
     quiq = Quiqfinder(grid, playing_as)
     if quiq != None:
-        return quiq
+        yield quiq
+    yield
     quiq = Quiqfinder(grid, opponent)
     if quiq != None:
-        return quiq
+        yield quiq
     for pos in possible_positions:
+        yield
         x = pos[0]
         y = pos[1]
         cp_grid[x][y] = playing_as
         if Quiqfinder(cp_grid, playing_as) != None:
-            return pos
+            yield pos
         cp_grid[x][y] = '_'
     for pos in possible_positions:
+        yield
         x = pos[0]
         y = pos[1]
         cp_grid[x][y] = opponent
         if calculate_stress(cp_grid, opponent, end_on_two=True) >= 2:
-            return pos
+            yield pos
         cp_grid[x][y] = '_'
     if playing_as == 'x':
         maximizing_player = True
     else:
         maximizing_player = False
+    yield
     out = minimax(grid, 2, -100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,
                   100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000, maximizing_player, True, get_scoregrid(grid, 4, 2), [], 4, 2)
-    return (int(out[0]), int(out[1]))
+    yield (int(out[0]), int(out[1]))
 
 
 def get_possible_positions(grid):
@@ -730,7 +742,7 @@ def Kabir(grid, playing_as):
         opponent = 'o'
     possible_positions = get_possible_positions(grid)
     if len(possible_positions) == 1:
-        return possible_positions[0]
+        yield possible_positions[0]
     lines = [
         # to_line_3('---xx_xx-'),
         to_line_3('-xxxx_---'),
@@ -748,6 +760,7 @@ def Kabir(grid, playing_as):
         for pos in possible_positions:
             lines_to_check = []
             for x in range(-1, 2):
+                yield
                 for y in range(-1, 2):
                     if x != 0 or y != 0:
                         dir = (x, y)
@@ -755,15 +768,16 @@ def Kabir(grid, playing_as):
                             grid, (pos[0]-dir[0]*5, pos[1]-dir[1]*5), 9, dir, playing_as == 'o'))
             for line in lines_to_check:
                 if intersect_lines(line_to_defo, line):
-                    return pos
+                    yield pos
     # return random.choice(possible_positions)
     if playing_as == 'x':
         maximizing_player = True
     else:
         maximizing_player = False
+    yield
     out = minimax(grid, 1, -100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,
                   100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000, maximizing_player, True, get_scoregrid(grid, 4, 2), [], 4, 2)
-    return (int(out[0]), int(out[1]))
+    yield (int(out[0]), int(out[1]))
 
 
 def stress_depth_search(grid, placing_as, depth=2, return_move=True):
@@ -950,9 +964,11 @@ def bot_proto_6(grid, playing_as):
         to_line_3('--_oo_o--'),
     ]
     for line_to_defo in lines:
+        yield
         for pos in possible_positions:
             lines_to_check = []
             for x in range(-1, 2):
+                yield
                 for y in range(-1, 2):
                     if x != 0 or y != 0:
                         dir = (x, y)
@@ -960,24 +976,28 @@ def bot_proto_6(grid, playing_as):
                             grid, (pos[0]-dir[0]*5, pos[1]-dir[1]*5), 9, dir, playing_as == 'o'))
 
             for line in lines_to_check:
+                yield
                 if intersect_lines(line_to_defo, line):
-                    return pos
+                    yield pos
     poss = []
     for x, line in enumerate(calculate_grid_intersection_values(grid, 'x')):
+        yield
         for y, col in enumerate(line):
             poss.append({'pos': (x, y), 'val': col})
     for x, line in enumerate(calculate_grid_intersection_values(grid, 'o')):
+        yield
         for y, col in enumerate(line):
             poss.append({'pos': (x, y), 'val': col})
     poss = sorted(poss, key=lambda d: d['val'])
     poss.reverse()
+    yield
     positions_to_go = []
     for pos in poss:
         if pos['val'] >= poss[0]['val']:
             positions_to_go.append(pos['pos'])
         else:
             break
-    return random.choice(positions_to_go)
+    yield random.choice(positions_to_go)
 
 
 def over_dedicated_bot(grid, playing_as):
@@ -1016,7 +1036,7 @@ def over_dedicated_bot(grid, playing_as):
 
             for line in lines_to_check:
                 if intersect_lines(line_to_defo, line):
-                    return pos
+                    yield pos
     if playing_as == 'x':
         global x_mem
         my_mem = x_mem
@@ -1030,6 +1050,7 @@ def over_dedicated_bot(grid, playing_as):
             if get_of_grid_3(grid, (pos_x, pos_y)) not in [playing_as, '_']:
                 my_mem = None
                 break
+    yield
     if my_mem == None:
         fives = []
         for x in range(len(grid)):
@@ -1053,13 +1074,72 @@ def over_dedicated_bot(grid, playing_as):
                         fives.append(
                             {'start_x': x, 'start_y': y, 'dir_x': dir[0], 'dir_y': dir[1], 'val': x_count})
         if len(fives) == 0:
-            return random.choice(get_possible_positions(grid))
+            yield random.choice(get_possible_positions(grid))
         fives = sorted(fives, key=lambda d: d['val'])
         my_mem = fives[-1]
     positions_to_go = []
+    yield
     for i in range(5):
         pos_x = my_mem['start_x']+my_mem['dir_x']*i
         pos_y = my_mem['start_y']+my_mem['dir_y']*i
         if get_of_grid_3(grid, (pos_x, pos_y)) == '_':
             positions_to_go.append((pos_x, pos_y))
-    return random.choice(positions_to_go)
+    yield random.choice(positions_to_go)
+
+def get_inflated_pos(grid):
+    out = []
+    for x in range(len(grid)):
+        for y in range(len(grid[0])):
+            if get_of_grid_3(grid, (x, y)) != '_':
+                continue
+            done = False
+            for x_offset in range(-2, 3):
+                for y_offset in range(-2, 3):
+                    if x_offset == 0 and y_offset == 0:
+                        continue
+                    if get_of_grid_3(grid, (x+x_offset, y+y_offset)) in ['x', 'o']:
+                        out.append((x, y))
+                        #done = True
+                        #break
+                if done:
+                    break
+    return out
+
+def easy_bot(grid, playing_as):
+    opponent = 'x'
+    if playing_as == 'x':
+        opponent = 'o'
+    cp_grid = json.loads(json.dumps(grid))
+    possible_positions = get_possible_positions(grid)
+    random.shuffle(possible_positions)
+    lines = [
+        to_line_3('---xx_xx-'),
+        to_line_3('--xxx_x--'),
+        to_line_3('-xxxx_---'),
+        to_line_3('--xoo_oo-'),
+        to_line_3('-xooo_o--'),
+        to_line_3('xoooo_---'),
+        to_line_3('noooo_---'),
+        to_line_3('x-ooo_o--'),
+        to_line_3('--ooo_o--'),
+        to_line_3('-_xxx_---'),
+        to_line_3('--_xx_x_-'),
+        to_line_3('-_ooo_---'),
+        to_line_3('--_oo_o_-'),
+        to_line_3('---oo_o_-'),
+        to_line_3('--_oo_o--'),
+    ]
+    for line_to_defo in lines:
+        yield
+        for pos in possible_positions:
+            lines_to_check = []
+            for x in range(-1, 2):
+                for y in range(-1, 2):
+                    if x != 0 or y != 0:
+                        dir = (x, y)
+                        lines_to_check.append(get_line_3(
+                            grid, (pos[0]-dir[0]*5, pos[1]-dir[1]*5), 9, dir, playing_as == 'o'))
+            for line in lines_to_check:
+                if intersect_lines(line_to_defo, line):
+                    yield pos
+    yield random.choice(get_inflated_pos(grid))
