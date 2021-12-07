@@ -32,7 +32,7 @@ USABLE_AMOUNT_OF_SCREEN = 0.94
 SQUARE_PADDING = 0.05
 BOT_PLAY_DELAY = 0.05
 REPLAY_PLAY_DELAY = 0.4
-VERSION = 'v2.0'
+VERSION = 'v2.0.1'
 ALLDIRS = [(-1, 1), (0, 1), (1, 1), (-1, 0),
            (1, 0), (-1, -1), (0, -1), (1, -1)]
 
@@ -968,7 +968,6 @@ def bot_proto_6(grid, playing_as):
         for pos in possible_positions:
             lines_to_check = []
             for x in range(-1, 2):
-                yield
                 for y in range(-1, 2):
                     if x != 0 or y != 0:
                         dir = (x, y)
@@ -976,7 +975,6 @@ def bot_proto_6(grid, playing_as):
                             grid, (pos[0]-dir[0]*5, pos[1]-dir[1]*5), 9, dir, playing_as == 'o'))
 
             for line in lines_to_check:
-                yield
                 if intersect_lines(line_to_defo, line):
                     yield pos
     poss = []
