@@ -12,8 +12,8 @@ def install(package):
 
 DEBUG_RENDERING = False
 
-subprocess.run(["curl", "--insecure",
-               "https://raw.githubusercontent.com/niknal357/5inarow_tictactoe/main/tictactoe_lib.py", "-o", "tictactoe_lib.py"])
+# subprocess.run(["curl", "--insecure",
+#                "https://raw.githubusercontent.com/niknal357/5inarow_tictactoe/main/tictactoe_lib.py", "-o", "tictactoe_lib.py"])
 
 if True:
     from tictactoe_lib import *
@@ -72,7 +72,7 @@ X_BOT = None
 O_BOT = bot_attempt_2
 
 bots = [{'name': 'Human', 'func': None}, {'name': 'Kabir', 'func': Kabir}, {'name': 'Bot 2',
-                                                                            'func': bot_attempt_2}, {'name': 'Bot 3', 'func': bot_3}, {'name': 'Bot 3.1', 'func': bot_quasi_3}, {'name': 'Bot 4', 'func': bot_4}, {'name': 'Bot 5', 'func': bot_5}, {'name': 'Bot 6 (Prototype -> not good)', 'func': bot_proto_6}, {'name': 'Over-dedicated', 'func': over_dedicated_bot}, {'name': 'Easy Bot', 'func': easy_bot}]  # {'name': 'Stress Depth', 'func': stress_depth_search}, {'name': 'Bot 5', 'func': bot_5}]
+                                                                            'func': bot_attempt_2}, {'name': 'Bot 3', 'func': bot_3}, {'name': 'Bot 3.1', 'func': bot_quasi_3}, {'name': 'Bot 4', 'func': bot_4}, {'name': 'Bot 5', 'func': bot_5}, {'name': 'Bot 6 (Prototype -> not good)', 'func': bot_proto_6}, {'name': 'Over-dedicated', 'func': over_dedicated_bot}, {'name': 'Easy Bot', 'func': easy_bot}, {'name': 'Manzoh Bot', 'func': manzoh_bot}]  # {'name': 'Stress Depth', 'func': stress_depth_search}, {'name': 'Bot 5', 'func': bot_5}]
 
 
 def replay_bot(grid, playing_as):
@@ -203,7 +203,7 @@ if not save_replay:
 
 game_running = True
 x_player = 0
-o_player = -4
+o_player = -5
 
 x_memory = None
 o_memory = None
