@@ -12,8 +12,7 @@ def install(package):
 
 DEBUG_RENDERING = False
 
-# subprocess.run(["curl", "--insecure",
-#                "https://raw.githubusercontent.com/niknal357/5inarow_tictactoe/main/tictactoe_lib.py", "-o", "tictactoe_lib.py"])
+subprocess.run(["curl", "--insecure", "https://raw.githubusercontent.com/niknal357/5inarow_tictactoe/main/tictactoe_lib.py", "-o", "tictactoe_lib.py"])
 
 if True:
     from tictactoe_lib import *
