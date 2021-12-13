@@ -23,6 +23,8 @@ except:
 x_mem = None
 o_mem = None
 
+global_text = ''
+
 replay_name_x = ''
 replay_name_o = ''
 replay_counter = -1
@@ -32,7 +34,7 @@ USABLE_AMOUNT_OF_SCREEN = 0.94
 SQUARE_PADDING = 0.05
 BOT_PLAY_DELAY = 0.05
 REPLAY_PLAY_DELAY = 0.4
-VERSION = 'v2.0.2'
+VERSION = 'v2.1'
 ALLDIRS = [(-1, 1), (0, 1), (1, 1), (-1, 0),
            (1, 0), (-1, -1), (0, -1), (1, -1)]
 
@@ -405,7 +407,7 @@ def minimax(grid, depth, alpha, beta, maximizing_player, return_pos, original_sc
             return minEval
 
 
-def calculate_stress(grid, stress_from, end_on_two=False):
+def calculate_stress(grid, stress_from, return_on=1000000000000):
     #positions = get_list_of_grid(grid)
     # positions = inflate_gridlist(
     #    positions, GRID_SIZE_X-1, GRID_SIZE_Y-1, amount=2, offset_x=-3, offset_y=-3)
@@ -432,7 +434,7 @@ def calculate_stress(grid, stress_from, end_on_two=False):
                 for stress_yes in lines:
                     if intersect_lines(stress_yes['line'], line_1) or intersect_lines(stress_yes['line'], line_2):
                         total_stress += stress_yes['val']
-                    if total_stress >= 2 and end_on_two:
+                    if total_stress >= return_on:
                         return total_stress
     return total_stress
 
@@ -593,19 +595,19 @@ def bot_4(grid, playing_as):
             for line in lines_to_check:
                 if intersect_lines(line_to_defo, line):
                     yield pos
-    stress = calculate_stress(grid, opponent, end_on_two=True)
+    stress = calculate_stress(grid, opponent, return_on=2)
     cp_grid = json.loads(json.dumps(grid))
     if stress < 1:
         for pos in possible_positions:
             yield
             cp_grid[pos[0]][pos[1]] = playing_as
-            if calculate_stress(cp_grid, playing_as, end_on_two=True) >= 2:
+            if calculate_stress(cp_grid, playing_as, return_on=2) >= 2:
                 yield pos
             cp_grid[pos[0]][pos[1]] = '_'
     for pos in possible_positions:
         yield
         cp_grid[pos[0]][pos[1]] = opponent
-        if calculate_stress(cp_grid, opponent, end_on_two=True) >= 2:
+        if calculate_stress(cp_grid, opponent, return_on=2) >= 2:
             yield pos
         cp_grid[pos[0]][pos[1]] = '_'
     if playing_as == 'x':
@@ -677,7 +679,15 @@ def bot_5(grid, playing_as):
         x = pos[0]
         y = pos[1]
         cp_grid[x][y] = opponent
-        if calculate_stress(cp_grid, opponent, end_on_two=True) >= 2:
+        if calculate_stress(cp_grid, opponent, return_on=2) >= 2:
+            yield pos
+        cp_grid[x][y] = '_'
+    for pos in possible_positions:
+        yield
+        x = pos[0]
+        y = pos[1]
+        cp_grid[x][y] = opponent
+        if Quiqfinder(cp_grid, opponent) != None:
             yield pos
         cp_grid[x][y] = '_'
     if playing_as == 'x':
@@ -1078,10 +1088,25 @@ def over_dedicated_bot(grid, playing_as):
     positions_to_go = []
     yield
     for i in range(5):
+        pos_x_left = my_mem['start_x']+my_mem['dir_x']*(i-1)
+        pos_y_left = my_mem['start_y']+my_mem['dir_y']*(i-1)
         pos_x = my_mem['start_x']+my_mem['dir_x']*i
         pos_y = my_mem['start_y']+my_mem['dir_y']*i
-        if get_of_grid_3(grid, (pos_x, pos_y)) == '_':
-            positions_to_go.append((pos_x, pos_y))
+        pos_x_right = my_mem['start_x']+my_mem['dir_x']*(i+1)
+        pos_y_right = my_mem['start_y']+my_mem['dir_y']*(i+1)
+        if i == 0:
+            if get_of_grid_3(grid, (pos_x, pos_y)) == '_':# and get_of_grid_3(grid, (pos_x_right, pos_y_right)) == playing_as:
+                positions_to_go.append((pos_x, pos_y))
+        elif i == 4:
+            if get_of_grid_3(grid, (pos_x, pos_y)) == '_':# and get_of_grid_3(grid, (pos_x_left, pos_y_left)) == playing_as:
+                positions_to_go.append((pos_x, pos_y))
+        elif i == 2:
+            if get_of_grid_3(grid, (my_mem['start_x']+my_mem['dir_x']*0, my_mem['start_y']+my_mem['dir_y']*0)) != '_' and get_of_grid_3(grid, (my_mem['start_x']+my_mem['dir_x']*4, my_mem['start_y']+my_mem['dir_y']*4)) != '_':
+                positions_to_go.append((pos_x, pos_y))
+                
+        else:
+            if get_of_grid_3(grid, (pos_x, pos_y)) == '_' and (get_of_grid_3(grid, (pos_x_left, pos_y_left)) == playing_as or get_of_grid_3(grid, (pos_x_right, pos_y_right)) == playing_as):
+                positions_to_go.append((pos_x, pos_y))
     yield random.choice(positions_to_go)
 
 def get_inflated_pos(grid):
@@ -1101,6 +1126,8 @@ def get_inflated_pos(grid):
                         #break
                 if done:
                     break
+    if len(out) == 0:
+        out.append((len(grid)//2, len(grid[0])//2))
     return out
 
 def easy_bot(grid, playing_as):
@@ -1190,3 +1217,205 @@ def manzoh_bot(grid, playing_as):
         if grid[corner[0]][corner[1]] == '_':
             yield corner
     yield random.choice(get_inflated_pos(grid))
+
+def meh_bot(grid, playing_as):
+    opponent = 'x'
+    if playing_as == 'x':
+        opponent = 'o'
+    lines = [
+        to_line_3('---xx_xx-'),
+        to_line_3('--xxx_x--'),
+        to_line_3('-xxxx_---'),
+        to_line_3('--xoo_oo-'),
+        to_line_3('-xooo_o--'),
+        to_line_3('xoooo_---'),
+        to_line_3('noooo_---'),
+        to_line_3('x-ooo_o--'),
+        to_line_3('--ooo_o--'),
+        to_line_3('-_xxx_---'),
+        to_line_3('--_xx_x_-'),
+        to_line_3('-_ooo_---'),
+        to_line_3('--_oo_o_-'),
+        to_line_3('---oo_o_-'),
+        to_line_3('--_oo_o--'),
+    ]
+    for line_to_defo in lines:
+        for pos in get_possible_positions(grid):
+            lines_to_check = []
+            for x in range(-1, 2):
+                for y in range(-1, 2):
+                    if x != 0 or y != 0:
+                        dir = (x, y)
+                        lines_to_check.append(get_line_3(
+                            grid, (pos[0]-dir[0]*5, pos[1]-dir[1]*5), 9, dir, playing_as == 'o'))
+            for line in lines_to_check:
+                if intersect_lines(line_to_defo, line):
+                    yield pos
+    quiq = Quiqfinder(grid, playing_as)
+    if quiq != None:
+        print('self quiq')
+        yield quiq
+    yield
+    quiq = Quiqfinder(grid, opponent)
+    if quiq != None:
+        print('opponent quiq')
+        yield quiq
+    yield
+    yield random.choice(get_inflated_pos(grid))
+
+def find_instinctual_moves(grid, placing_as):
+    positions = []
+    lines = [
+        to_line_3('---xx_xx-'),
+        to_line_3('--xxx_x--'),
+        to_line_3('-xxxx_---'),
+        to_line_3('--xoo_oo-'),
+        to_line_3('-xooo_o--'),
+        to_line_3('xoooo_---'),
+        to_line_3('noooo_---'),
+        to_line_3('-__xx___-'),
+        to_line_3('--__x_x__'),
+        to_line_3('x_ooo__--'),
+        to_line_3('x_ooo_---'),
+        to_line_3('-xooo__--'),
+        to_line_3('__ooo__--'),
+    ]
+    for pos in get_possible_positions(grid):
+        done = False
+        for dir in ALLDIRS:
+            line = get_line_3(grid, pos, 9, dir, placing_as=='o')
+            for pattern in lines:
+                if intersect_lines(line, pattern):
+                    positions.append(pos)
+                    done = True
+                    break
+            if done: break
+    return positions
+
+def get_all_grid_poss(x_len, y_len):
+    for x in range(x_len):
+        for y in range(y_len):
+            yield (x, y)
+
+def determine_win(grid, placing_as, testing_for, depth):
+    opponent_placing = 'x'
+    opponent_testing = 'x'
+    if placing_as == 'x':
+        opponent_placing = 'o'
+    if testing_for == 'x':
+        opponent_testing = 'o'
+    if depth == 0:
+        lines = [
+            to_line_3('_xxxx-'),
+            to_line_3('__xxx_'),
+            to_line_3('xxx_x-'),
+            to_line_3('xx_xx-'),
+            to_line_3('_xx_x_'),
+        ]
+        for pos in get_all_grid_poss(len(grid), len(grid[0])):
+            for dir in ALLDIRS:
+                line = get_line_3(grid, pos, 6, dir, placing_as=='o')
+                for pattern in lines:
+                    if intersect_lines(line, pattern):
+                        return True
+        return False
+    else:
+        cp_grid = json.loads(json.dumps(grid))
+        im = find_instinctual_moves(grid, placing_as)
+        if placing_as == testing_for:
+            if len(im) == 0:
+                return False
+            for move in im:
+                cp_grid[move[0]][move[1]] = placing_as
+                if determine_win(grid, opponent_placing, testing_for, depth-1):
+                    return True
+                cp_grid[move[0]][move[1]] = '_'
+            return False
+        else:
+            if len(im) == 0:
+                return False
+            for move in im:
+                cp_grid[move[0]][move[1]] = placing_as
+                if not determine_win(grid, opponent_placing, testing_for, depth):
+                    return False
+                cp_grid[move[0]][move[1]] = '_'
+            return True
+def testing_bot(grid, playing_as):
+    global global_text
+    global_text = ''
+    opponent = 'x'
+    if playing_as == 'x':
+        opponent = 'o'
+    cp_grid = json.loads(json.dumps(grid))
+    possible_positions = get_possible_positions(grid)
+    random.shuffle(possible_positions)
+    lines = [
+        to_line_3('---xx_xx-'),
+        to_line_3('--xxx_x--'),
+        to_line_3('-xxxx_---'),
+        to_line_3('--xoo_oo-'),
+        to_line_3('-xooo_o--'),
+        to_line_3('xoooo_---'),
+        to_line_3('noooo_---'),
+        to_line_3('x-ooo_o--'),
+        to_line_3('--ooo_o--'),
+        to_line_3('-_xxx_---'),
+        to_line_3('--_xx_x_-'),
+        to_line_3('-_ooo_---'),
+        to_line_3('--_oo_o_-'),
+        to_line_3('---oo_o_-'),
+        to_line_3('--_oo_o--'),
+    ]
+    for line_to_defo in lines:
+        yield
+        for pos in possible_positions:
+            lines_to_check = []
+            for x in range(-1, 2):
+                for y in range(-1, 2):
+                    if x != 0 or y != 0:
+                        dir = (x, y)
+                        lines_to_check.append(get_line_3(
+                            grid, (pos[0]-dir[0]*5, pos[1]-dir[1]*5), 9, dir, playing_as == 'o'))
+            for line in lines_to_check:
+                if intersect_lines(line_to_defo, line):
+                    yield pos
+    yield
+    cp_grid = json.loads(json.dumps(grid))
+    #for pos in get_all_grid_poss(len(grid), len(grid[0])):
+    #    yield
+    #    if grid[pos[0]][pos[1]] == '_':
+    #        cp_grid[pos[0]][pos[1]] = playing_as
+    #        if determine_win(grid, playing_as, playing_as, 4):
+    #            yield pos
+    #        cp_grid[pos[0]][pos[1]] = '_'
+    quiq = Quiqfinder(grid, playing_as)
+    if quiq != None: yield quiq
+    quiq = Quiqfinder(grid, opponent)
+    if quiq != None: yield quiq
+    poss = get_inflated_pos(grid)
+    i = 0
+    for pos in poss:
+        i += 1
+        global_text = str(i)+' / '+str(len(poss)*2)
+        print(str(i)+' / '+str(len(poss)*2))
+        yield global_text
+        if grid[pos[0]][pos[1]] == '_':
+            cp_grid[pos[0]][pos[1]] = playing_as
+            if Quiqfinder(cp_grid, playing_as) != None and calculate_stress(cp_grid, playing_as, return_on=1) >= 1:
+                yield pos
+            cp_grid[pos[0]][pos[1]] = '_'
+    for pos in poss:
+        i += 1
+        global_text = str(i)+' / '+str(len(poss)*2)
+        print(str(i)+' / '+str(len(poss)*2))
+        yield global_text
+        if grid[pos[0]][pos[1]] == '_':
+            cp_grid[pos[0]][pos[1]] = opponent
+            if Quiqfinder(cp_grid, opponent) != None and calculate_stress(cp_grid, opponent, return_on=1) >= 1:
+                yield pos
+            cp_grid[pos[0]][pos[1]] = '_'
+    
+    bot = bot_proto_6(grid, playing_as)
+    while True:
+        yield next(bot)
+    #yield next(bot_3(grid, playing_as))
