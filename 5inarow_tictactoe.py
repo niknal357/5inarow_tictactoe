@@ -729,8 +729,8 @@ def main():
 
 if __name__ == '__main__':
     pygame.init()
-    #screen = pygame.display.set_mode([0, 0], pygame.FULLSCREEN)
-    screen = pygame.display.set_mode((1500, 900))
+    screen = pygame.display.set_mode([0, 0], pygame.FULLSCREEN)
+    #screen = pygame.display.set_mode((1500, 900))
     x_size, y_size = screen.get_size()
     height_of_label = int((y_size-y_size*USABLE_AMOUNT_OF_SCREEN)/3)
     small_font = pygame.font.SysFont("calibri", int(
