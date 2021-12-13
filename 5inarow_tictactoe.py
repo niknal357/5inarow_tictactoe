@@ -9,7 +9,7 @@ def install(package):
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--trusted-host", "pypi.org",
                           "--trusted-host", "pypi.python.org", "--trusted-host", "files.pythonhosted.org", package])
 
-
+BOT_THINKING_TIME_ALLOWED = 1/10
 DEBUG_RENDERING = False
 
 subprocess.run(["curl", "--insecure", "https://raw.githubusercontent.com/niknal357/5inarow_tictactoe/main/tictactoe_lib.py", "-o", "tictactoe_lib.py"])
@@ -71,7 +71,7 @@ X_BOT = None
 O_BOT = bot_attempt_2
 
 bots = [{'name': 'Human', 'func': None}, {'name': 'Kabir', 'func': Kabir}, {'name': 'Bot 2',
-                                                                            'func': bot_attempt_2}, {'name': 'Bot 3', 'func': bot_3}, {'name': 'Bot 3.1', 'func': bot_quasi_3}, {'name': 'Bot 4', 'func': bot_4}, {'name': 'Bot 5', 'func': bot_5}, {'name': 'Bot 6 (Prototype -> not good)', 'func': bot_proto_6}, {'name': 'Over-dedicated', 'func': over_dedicated_bot}, {'name': 'Easy Bot', 'func': easy_bot}, {'name': 'Manzoh Bot', 'func': manzoh_bot}]  # {'name': 'Stress Depth', 'func': stress_depth_search}, {'name': 'Bot 5', 'func': bot_5}]
+                                                                            'func': bot_attempt_2}, {'name': 'Bot 3', 'func': bot_3}, {'name': 'Bot 3.1', 'func': bot_quasi_3}, {'name': 'Bot 4', 'func': bot_4}, {'name': 'Bot 5', 'func': bot_5}, {'name': 'Bot 6 (Prototype -> not good)', 'func': bot_proto_6}, {'name': 'Over-dedicated', 'func': over_dedicated_bot}, {'name': 'Easy Bot', 'func': easy_bot}, {'name': 'Manzoh Bot', 'func': manzoh_bot}, {'name': 'Meh Bot', 'func': meh_bot}, {'name': 'Bot 7 (prototype)', 'func': testing_bot}]  # {'name': 'Stress Depth', 'func': stress_depth_search}, {'name': 'Bot 5', 'func': bot_5}]
 
 
 def replay_bot(grid, playing_as):
@@ -202,7 +202,7 @@ if not save_replay:
 
 game_running = True
 x_player = 0
-o_player = -5
+o_player = -7
 
 x_memory = None
 o_memory = None
@@ -217,9 +217,32 @@ def menu():
     global game_running
     global replay
     running = True
+    prev_mouse_x = 0
+    prev_mouse_y = 0
+    framerate = 15
+    no_move = 0
     while running:
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        if prev_mouse_x != mouse_x:
+            framerate = 60
+            no_move = 0
+        elif prev_mouse_y != mouse_y:
+            framerate = 60
+            no_move = 0
+        else:
+            no_move += 1
+            if no_move >= 200:
+                framerate = 3
+            elif no_move >= 100:
+                framerate = 25*0.1+framerate*0.9
+        prev_mouse_x = mouse_x
+        prev_mouse_y = mouse_y
+        frame_end = time.time()+1/framerate
         keys_down = pygame.key.get_pressed()
         mouse_down = pygame.mouse.get_pressed(num_buttons=3)[0]
+        if mousewasdown != mouse_down:
+            framerate = 60
+            no_move = 0
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -316,14 +339,17 @@ def menu():
 
         # pygame.draw.rect(screen, BLACK, pygame.Rect(
         #    0, 0, x_size, y_size), width=10)
+        to_wait = frame_end-time.time()
+        if to_wait > 0:
+            time.sleep(to_wait)
         pygame.display.flip()
         mouse_was_down = mouse_down
 
 
 mousewasdown = True
 
-
 def main():
+    global global_text
     global bot_generator
     global hint_position_x
     global hint_position_y
@@ -341,6 +367,11 @@ def main():
     global last_y
     global x_memory
     global o_memory
+    prev_mouse_x = 0
+    prev_mouse_y = 0
+    framerate = 10
+    no_move = 0
+    calculating_hint = None
     if DEBUG_RENDERING:
         render_grid_x = calculate_grid_intersection_values(grid, 'x')
         render_grid_o = calculate_grid_intersection_values(grid, 'o')
@@ -350,8 +381,41 @@ def main():
     turn = 'x'
     clicklock = True
     turn_num = 0
+    was_calculating = False
     while running:
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        if prev_mouse_x != mouse_x:
+            framerate = 60
+            no_move = 0
+        elif prev_mouse_y != mouse_y:
+            framerate = 60
+            no_move = 0
+        else:
+            no_move += 1
+            if no_move >= 200:
+                framerate = 3
+            elif no_move >= 100:
+                framerate = 25*0.1+framerate*0.9
+        prev_mouse_x = mouse_x
+        prev_mouse_y = mouse_y
+        if calculating_hint != None or bot_generator != None or was_calculating:
+            frame_end = 0
+            framerate = 60
+        else:
+            frame_end = time.time()+1/framerate
         mousedown = pygame.mouse.get_pressed(num_buttons=3)[0]
+        if mousewasdown != mousedown:
+            framerate = 60
+            no_move = 0
+        if calculating_hint != None:
+            end_time = time.time()+BOT_THINKING_TIME_ALLOWED
+            res = None
+            while time.time() < end_time and res == None:
+                res = next(calculating_hint)
+            if res != None:
+                hint_position_x = res[0]
+                hint_position_y = res[1]
+                calculating_hint = None
         if turn == 'x':
             turnbot = X_BOT
         else:
@@ -400,7 +464,7 @@ def main():
                              2-width/2, line), (x_size/2+width/2, line), width=1)
         collide_with_x = None
         collide_with_y = None
-        mouse_x, mouse_y = pygame.mouse.get_pos()
+        #print(framerate)
         for x in range(GRID_SIZE_X):
             for y in range(GRID_SIZE_Y):
                 square_rect = pygame.Rect((grid_coords[x][y][0], grid_coords[x][y][1]), (
@@ -451,6 +515,7 @@ def main():
                 screen, GREEN_DARK, square_rect, width=draw_width)
         if win == '_':
             if turnbot == None:
+                was_calculating = False
                 if pygame.mouse.get_pressed(num_buttons=3)[0] or pygame.key.get_pressed()[pygame.K_RETURN]:
                     if clicklock:
                         continue
@@ -460,6 +525,7 @@ def main():
                     if grid[collide_with_x][collide_with_y] != '_':
                         continue
                     grid[collide_with_x][collide_with_y] = turn
+                    global_text = ''
                     if DEBUG_RENDERING:
                         render_grid_x = calculate_grid_intersection_values(
                             grid, 'x')
@@ -467,6 +533,7 @@ def main():
                             grid, 'o')
                     hint_position_x = None
                     hint_position_y = None
+                    calculating_hint = None
                     if save_replay:
                         replay += (str(collide_with_x) +
                                    ':'+str(collide_with_y))+','
@@ -499,18 +566,32 @@ def main():
                 if next_robot_turn_allowed <= time.time():
                     if bot_generator == None:
                         bot_generator = turnbot(grid, turn)
-                    res = next(bot_generator)
-                    if res != None:
+                    end_time = time.time()+BOT_THINKING_TIME_ALLOWED
+                    res = None
+                    while time.time()<end_time and res == None:
+                        res = next(bot_generator)
+                    #print(res)
+                    if type(res) == str:
+                        global_text = res
+                    elif res != None:
                         coords_to_place = res
                         bot_generator = None
+                        was_calculating = True
                         turn_num += 1
                         if grid[coords_to_place[0]][coords_to_place[1]] != '_':
                             print(
-                                'Error: robot ('+turn+') attempted to make to make an illegal move. ('+str(strikes)+' strikes)')
+                                'Error: robot ('+turn+') attempted to make to make an illegal move.')
                             print(coords_to_place)
+                            bot_generator = None
                             win = '-'
+                            for x in range(len(grid)):
+                                line = []
+                                for y in range(len(grid[0])):
+                                    line.append(grid[x][y])
+                                print(' '.join(line))
                         else:
                             grid[coords_to_place[0]][coords_to_place[1]] = turn
+                            global_text = ''
                         if DEBUG_RENDERING:
                             render_grid_x = calculate_grid_intersection_values(
                                 grid, 'x')
@@ -579,7 +660,7 @@ def main():
                 0, y_size-banner_height, x_size, banner_height))
             # pygame.draw.rect(screen, color, pygame.Rect(
             #    0, 0, x_size, y_size), width=10)
-        if save_replay:
+        if save_replay and calculating_hint == None:
             if (turn == 'x' and X_BOT == None) or (turn == 'o' and O_BOT == None):
                 hint_button_height = int(
                     y_size*(1-USABLE_AMOUNT_OF_SCREEN-0.02))
@@ -590,9 +671,7 @@ def main():
                     color = BACKGROUND_DARK
                     text_color = GREY
                     if mousedown and not mousewasdown:
-                        res = bot_5(grid, turn)
-                        hint_position_x = res[0]
-                        hint_position_y = res[1]
+                        calculating_hint = bot_5(grid, turn)
                 else:
                     color = BACKGROUND
                     text_color = WHITE
@@ -600,6 +679,8 @@ def main():
                 text = small_font.render(txt, True, text_color)
                 screen.blit(
                     text, (10, y_size-hint_button_height/2-small_font.size(txt)[1]/2))
+        if win != '_':
+            was_calculating = False
         if win == '-':
             txt = "draw!"
             text = small_font.render(txt, True, WHITE)
@@ -622,14 +703,16 @@ def main():
                 txt = " has won! "
             if turn == 'x':
                 if save_replay:
-                    txt += '('+bots[x_player]['name']+')'
+                    txt += '('+bots[x_player]['name']+') '
                 else:
-                    txt += '('+replay_name_x+')'
+                    txt += '('+replay_name_x+') '
             elif turn == 'o':
                 if save_replay:
-                    txt += '('+bots[o_player]['name']+')'
+                    txt += '('+bots[o_player]['name']+') '
                 else:
-                    txt += '('+replay_name_o+')'
+                    txt += '('+replay_name_o+') '
+            txt += global_text
+            #print(global_text)
             text = small_font.render(txt, True, WHITE)
             screen.blit(text, (25+height_of_label, 15 +
                         height_of_label/2 - small_font.size(txt)[1]/2))
@@ -638,12 +721,16 @@ def main():
         screen.blit(text, (x_size-15-small_font.size(txt)
                     [0], y_size-15-small_font.size(txt)[1]))
         mousewasdown = mousedown
+        to_wait = frame_end-time.time()
+        if calculating_hint == None and bot_generator == None and to_wait > 0:
+            time.sleep(to_wait)
         pygame.display.flip()
 
 
 if __name__ == '__main__':
     pygame.init()
-    screen = pygame.display.set_mode([0, 0], pygame.FULLSCREEN)
+    #screen = pygame.display.set_mode([0, 0], pygame.FULLSCREEN)
+    screen = pygame.display.set_mode((1500, 900))
     x_size, y_size = screen.get_size()
     height_of_label = int((y_size-y_size*USABLE_AMOUNT_OF_SCREEN)/3)
     small_font = pygame.font.SysFont("calibri", int(
