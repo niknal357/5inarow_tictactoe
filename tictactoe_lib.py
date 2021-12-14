@@ -2,12 +2,16 @@ import random
 import math
 import sys
 import subprocess
+import time
 
 
 def install(package):
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--trusted-host", "pypi.org",
                           "--trusted-host", "pypi.python.org", "--trusted-host", "files.pythonhosted.org", package])
 
+
+INFLATED_OFFSETS = [(-2, -2), (0, -2), (2, -2), (-2, 0), (2, 0), (-2, 2), (0, 2),
+                    (2, 2), (-1, 1), (0, 1), (1, 1), (-1, 0), (1, 0), (-1, -1), (0, -1), (1, -1)]
 
 try:
     import ujson as json
@@ -33,8 +37,8 @@ replay_playback = []
 USABLE_AMOUNT_OF_SCREEN = 0.94
 SQUARE_PADDING = 0.05
 BOT_PLAY_DELAY = 0.05
-REPLAY_PLAY_DELAY = 0.4
-VERSION = 'v2.1'
+REPLAY_PLAY_DELAY = 1
+VERSION = 'v2.1.1'
 ALLDIRS = [(-1, 1), (0, 1), (1, 1), (-1, 0),
            (1, 0), (-1, -1), (0, -1), (1, -1)]
 
@@ -362,7 +366,8 @@ def minimax(grid, depth, alpha, beta, maximizing_player, return_pos, original_sc
     playing_as = 'o'
     if maximizing_player:
         playing_as = 'x'
-    possible_positions_with_val = next(bot_3(grid, playing_as, return_sorted=True))
+    possible_positions_with_val = next(
+        bot_3(grid, playing_as, return_sorted=True))
     possible_positions = []
     for pos in possible_positions_with_val:
         possible_positions.append(pos['pos'])
@@ -416,9 +421,9 @@ def calculate_stress(grid, stress_from, return_on=1000000000000):
         {'line': to_line_3('_xxxxo'), 'val': 1.5},
         {'line': to_line_3('oxxxx_'), 'val': 1.5},
         {'line': to_line_3('__xxx__'), 'val': 1},
-        {'line': to_line_3('_x_x_x_'), 'val': 1},
-        {'line': to_line_3('_x__xx_'), 'val': 1},
-        {'line': to_line_3('_xx__x_'), 'val': 1},
+        #{'line': to_line_3('_x_x_x_'), 'val': 1},
+        #{'line': to_line_3('_x__xx_'), 'val': 1},
+        #{'line': to_line_3('_xx__x_'), 'val': 1},
         {'line': to_line_3('o_xxx_'), 'val': 1},  # ?
         {'line': to_line_3('_x_xx_'), 'val': 1},
         {'line': to_line_3('_xxx_o'), 'val': 1},  # ?
@@ -890,32 +895,34 @@ def Quiqfinder(grid, placing_as):
         to_line_3('-_x_x__--'),
         to_line_3('--_x__x_-'),
         to_line_3('-_xx___--'),
-        to_line_3('_x_x___--'),
-        to_line_3('--_x___x_'),
-        to_line_3('_xx____--'),
-        to_line_3('_x__x__--'),
-        to_line_3('-_x___x_-'),
+        # to_line_3('_x_x___--'),
+        # to_line_3('--_x___x_'),
+        # to_line_3('_xx____--'),
+        # to_line_3('_x__x__--'),
+        # to_line_3('-_x___x_-'),
     ]
-    x_s = list(range(len(grid)))
-    y_s = list(range(len(grid[0])))
-    random.shuffle(x_s)
-    random.shuffle(y_s)
-    for x in x_s:
-        for y in y_s:
-            matched = {}
-            for dir in ALLDIRS:
-                matched[dirToStr(dir)] = None
-            cnt = 0
-            for dir in ALLDIRS:
-                line = get_line_3(
-                    grid, (x-dir[0]*5, y-dir[1]*5), 9, dir, placing_as == 'o')
-                for i, pattern in enumerate(patterns):
-                    if matched[dirToStr(invertDir(dir))] != i:
-                        if intersect_lines(pattern, line):
-                            matched[dirToStr(dir)] = i
-                            cnt += 1
-                            if cnt >= 2:
-                                return (x, y)
+    #x_s = list(range(len(grid)))
+    #y_s = list(range(len(grid[0])))
+    # random.shuffle(x_s)
+    # random.shuffle(y_s)
+    # for x in x_s:
+    #    for y in y_s:
+    for pos in get_inflated_pos(grid):
+        x, y = pos
+        matched = {}
+        for dir in ALLDIRS:
+            matched[dirToStr(dir)] = None
+        cnt = 0
+        for dir in ALLDIRS:
+            line = get_line_3(
+                grid, (x-dir[0]*5, y-dir[1]*5), 9, dir, placing_as == 'o')
+            for i, pattern in enumerate(patterns):
+                if matched[dirToStr(invertDir(dir))] != i:
+                    if intersect_lines(pattern, line):
+                        matched[dirToStr(dir)] = i
+                        cnt += 1
+                        if cnt >= 2:
+                            return (x, y)
     return None
 
 
@@ -1095,19 +1102,22 @@ def over_dedicated_bot(grid, playing_as):
         pos_x_right = my_mem['start_x']+my_mem['dir_x']*(i+1)
         pos_y_right = my_mem['start_y']+my_mem['dir_y']*(i+1)
         if i == 0:
-            if get_of_grid_3(grid, (pos_x, pos_y)) == '_':# and get_of_grid_3(grid, (pos_x_right, pos_y_right)) == playing_as:
+            # and get_of_grid_3(grid, (pos_x_right, pos_y_right)) == playing_as:
+            if get_of_grid_3(grid, (pos_x, pos_y)) == '_':
                 positions_to_go.append((pos_x, pos_y))
         elif i == 4:
-            if get_of_grid_3(grid, (pos_x, pos_y)) == '_':# and get_of_grid_3(grid, (pos_x_left, pos_y_left)) == playing_as:
+            # and get_of_grid_3(grid, (pos_x_left, pos_y_left)) == playing_as:
+            if get_of_grid_3(grid, (pos_x, pos_y)) == '_':
                 positions_to_go.append((pos_x, pos_y))
         elif i == 2:
             if get_of_grid_3(grid, (my_mem['start_x']+my_mem['dir_x']*0, my_mem['start_y']+my_mem['dir_y']*0)) != '_' and get_of_grid_3(grid, (my_mem['start_x']+my_mem['dir_x']*4, my_mem['start_y']+my_mem['dir_y']*4)) != '_':
                 positions_to_go.append((pos_x, pos_y))
-                
+
         else:
             if get_of_grid_3(grid, (pos_x, pos_y)) == '_' and (get_of_grid_3(grid, (pos_x_left, pos_y_left)) == playing_as or get_of_grid_3(grid, (pos_x_right, pos_y_right)) == playing_as):
                 positions_to_go.append((pos_x, pos_y))
     yield random.choice(positions_to_go)
+
 
 def get_inflated_pos(grid):
     out = []
@@ -1115,20 +1125,28 @@ def get_inflated_pos(grid):
         for y in range(len(grid[0])):
             if get_of_grid_3(grid, (x, y)) != '_':
                 continue
-            done = False
-            for x_offset in range(-2, 3):
-                for y_offset in range(-2, 3):
-                    if x_offset == 0 and y_offset == 0:
-                        continue
-                    if get_of_grid_3(grid, (x+x_offset, y+y_offset)) in ['x', 'o']:
-                        out.append((x, y))
-                        #done = True
-                        #break
-                if done:
+            for offset in INFLATED_OFFSETS:
+                x_offset = offset[0]
+                y_offset = offset[1]
+                #print(x+x_offset, y+y_offset)
+                if get_of_grid_3(grid, (x+x_offset, y+y_offset)) in ['x', 'o']:
+                    out.append((x, y))
                     break
+            # for x_offset in range(-2, 3):
+            #    for y_offset in range(-2, 3):
+            #        if x_offset == 0 and y_offset == 0:
+            #            continue
+            #        if get_of_grid_3(grid, (x+x_offset, y+y_offset)) in ['x', 'o']:
+            #            out.append((x, y))
+            #            done = True
+            #            break
+            #    if done:
+            #        break
+    # print(out)
     if len(out) == 0:
         out.append((len(grid)//2, len(grid[0])//2))
     return out
+
 
 def easy_bot(grid, playing_as):
     opponent = 'x'
@@ -1168,6 +1186,7 @@ def easy_bot(grid, playing_as):
                 if intersect_lines(line_to_defo, line):
                     yield pos
     yield random.choice(get_inflated_pos(grid))
+
 
 def manzoh_bot(grid, playing_as):
     opponent = 'x'
@@ -1211,12 +1230,14 @@ def manzoh_bot(grid, playing_as):
     if quiq != None:
         yield quiq
     yield
-    corners = [(0, 0), (0, len(grid[0])-1), (len(grid)-1, 0), (len(grid)-1, len(grid[0])-1)]
+    corners = [(0, 0), (0, len(grid[0])-1), (len(grid)-1, 0),
+               (len(grid)-1, len(grid[0])-1)]
     random.shuffle(corners)
     for corner in corners:
         if grid[corner[0]][corner[1]] == '_':
             yield corner
     yield random.choice(get_inflated_pos(grid))
+
 
 def meh_bot(grid, playing_as):
     opponent = 'x'
@@ -1263,6 +1284,7 @@ def meh_bot(grid, playing_as):
     yield
     yield random.choice(get_inflated_pos(grid))
 
+
 def find_instinctual_moves(grid, placing_as):
     positions = []
     lines = [
@@ -1283,19 +1305,22 @@ def find_instinctual_moves(grid, placing_as):
     for pos in get_possible_positions(grid):
         done = False
         for dir in ALLDIRS:
-            line = get_line_3(grid, pos, 9, dir, placing_as=='o')
+            line = get_line_3(grid, pos, 9, dir, placing_as == 'o')
             for pattern in lines:
                 if intersect_lines(line, pattern):
                     positions.append(pos)
                     done = True
                     break
-            if done: break
+            if done:
+                break
     return positions
+
 
 def get_all_grid_poss(x_len, y_len):
     for x in range(x_len):
         for y in range(y_len):
             yield (x, y)
+
 
 def determine_win(grid, placing_as, testing_for, depth):
     opponent_placing = 'x'
@@ -1314,7 +1339,7 @@ def determine_win(grid, placing_as, testing_for, depth):
         ]
         for pos in get_all_grid_poss(len(grid), len(grid[0])):
             for dir in ALLDIRS:
-                line = get_line_3(grid, pos, 6, dir, placing_as=='o')
+                line = get_line_3(grid, pos, 6, dir, placing_as == 'o')
                 for pattern in lines:
                     if intersect_lines(line, pattern):
                         return True
@@ -1340,6 +1365,8 @@ def determine_win(grid, placing_as, testing_for, depth):
                     return False
                 cp_grid[move[0]][move[1]] = '_'
             return True
+
+
 def testing_bot(grid, playing_as):
     global global_text
     global_text = ''
@@ -1381,7 +1408,7 @@ def testing_bot(grid, playing_as):
                     yield pos
     yield
     cp_grid = json.loads(json.dumps(grid))
-    #for pos in get_all_grid_poss(len(grid), len(grid[0])):
+    # for pos in get_all_grid_poss(len(grid), len(grid[0])):
     #    yield
     #    if grid[pos[0]][pos[1]] == '_':
     #        cp_grid[pos[0]][pos[1]] = playing_as
@@ -1389,33 +1416,63 @@ def testing_bot(grid, playing_as):
     #            yield pos
     #        cp_grid[pos[0]][pos[1]] = '_'
     quiq = Quiqfinder(grid, playing_as)
-    if quiq != None: yield quiq
+    if quiq != None:
+        yield quiq
     quiq = Quiqfinder(grid, opponent)
-    if quiq != None: yield quiq
+    if quiq != None:
+        yield quiq
     poss = get_inflated_pos(grid)
+    # print(poss)
     i = 0
+    quiq_time = 0
+    stress_time = 0
+
     for pos in poss:
         i += 1
-        global_text = str(i)+' / '+str(len(poss)*2)
-        print(str(i)+' / '+str(len(poss)*2))
+        global_text = str(i)+' / '+str(len(poss)*4)
+        print(str(i)+' / '+str(len(poss)*4))
         yield global_text
         if grid[pos[0]][pos[1]] == '_':
             cp_grid[pos[0]][pos[1]] = playing_as
-            if Quiqfinder(cp_grid, playing_as) != None and calculate_stress(cp_grid, playing_as, return_on=1) >= 1:
+            if calculate_stress(cp_grid, playing_as, return_on=1) >= 1 and Quiqfinder(cp_grid, playing_as) != None:
+                print('epic opportunity found')
                 yield pos
             cp_grid[pos[0]][pos[1]] = '_'
     for pos in poss:
         i += 1
-        global_text = str(i)+' / '+str(len(poss)*2)
-        print(str(i)+' / '+str(len(poss)*2))
+        global_text = str(i)+' / '+str(len(poss)*4)
+        print(str(i)+' / '+str(len(poss)*4))
         yield global_text
         if grid[pos[0]][pos[1]] == '_':
             cp_grid[pos[0]][pos[1]] = opponent
-            if Quiqfinder(cp_grid, opponent) != None and calculate_stress(cp_grid, opponent, return_on=1) >= 1:
+            if calculate_stress(cp_grid, opponent, return_on=1) >= 1 and Quiqfinder(cp_grid, opponent) != None:
+                print('danger found')
                 yield pos
             cp_grid[pos[0]][pos[1]] = '_'
-    
+    for pos in poss:
+        i += 1
+        global_text = str(i)+' / '+str(len(poss)*4)
+        print(str(i)+' / '+str(len(poss)*4))
+        yield global_text
+        x = pos[0]
+        y = pos[1]
+        cp_grid[x][y] = playing_as
+        if Quiqfinder(cp_grid, playing_as) != None:
+            yield pos
+        cp_grid[x][y] = '_'
+    for pos in poss:
+        i += 1
+        global_text = str(i)+' / '+str(len(poss)*4)
+        print(str(i)+' / '+str(len(poss)*4))
+        yield global_text
+        x = pos[0]
+        y = pos[1]
+        cp_grid[x][y] = opponent
+        if calculate_stress(cp_grid, opponent, return_on=2) >= 2:
+            yield pos
+        cp_grid[x][y] = '_'
+
     bot = bot_proto_6(grid, playing_as)
     while True:
         yield next(bot)
-    #yield next(bot_3(grid, playing_as))
+    # yield next(bot_3(grid, playing_as))
