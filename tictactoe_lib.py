@@ -1367,7 +1367,7 @@ def determine_win(grid, placing_as, testing_for, depth):
             return True
 
 
-def testing_bot(grid, playing_as):
+def bot_7(grid, playing_as):
     global global_text
     global_text = ''
     opponent = 'x'
