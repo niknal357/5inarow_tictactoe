@@ -3,7 +3,9 @@ import time
 import random
 import math
 import sys
-
+import os
+if not os.path.exists('replays/'):
+    os.makedirs('replays/')
 
 def install(package):
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--trusted-host", "pypi.org",
@@ -12,7 +14,7 @@ def install(package):
 BOT_THINKING_TIME_ALLOWED = 1/10
 DEBUG_RENDERING = False
 
-subprocess.run(["curl", "--insecure", "https://raw.githubusercontent.com/niknal357/5inarow_tictactoe/main/tictactoe_lib.py", "-o", "tictactoe_lib.py"])
+# subprocess.run(["curl", "--insecure", "https://raw.githubusercontent.com/niknal357/5inarow_tictactoe/main/tictactoe_lib.py", "-o", "tictactoe_lib.py"])
 
 if True:
     from tictactoe_lib import *
@@ -56,7 +58,7 @@ else:
     replay = ''
 
 if save_replay:
-    replay_file = str(int(time.time()))+'.replay'
+    replay_file = 'replays/'+str(int(time.time()))+str(random.randint(0, 999999))+'.replay'
 
 win = '_'
 win_x_1 = None
@@ -87,8 +89,10 @@ def replay_bot(grid, playing_as):
 def setup():
     global bot_generator
     global grid
+    global replay_file
     global x_memory
     global o_memory
+    global replay
     global hint_position_x
     global hint_position_y
     global win, win_x_1, win_x_2, win_y_1, win_y_2
@@ -106,12 +110,14 @@ def setup():
     win_y_2 = None
     x_memory = None
     o_memory = None
-    replay_file = str(int(time.time()))+'.replay'
+    replay_file = 'replays/'+str(int(time.time()))+str(random.randint(0, 999999))+'.replay'
     grid = []
     for x in range(GRID_SIZE_X):
         grid.append([])
         for y in range(GRID_SIZE_Y):
             grid[x].append('_')
+    if save_replay:
+        replay = ''
 
 
 if save_replay:
