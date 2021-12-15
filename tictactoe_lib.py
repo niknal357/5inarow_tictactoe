@@ -38,7 +38,7 @@ USABLE_AMOUNT_OF_SCREEN = 0.94
 SQUARE_PADDING = 0.05
 BOT_PLAY_DELAY = 0.05
 REPLAY_PLAY_DELAY = 1
-VERSION = 'v2.1.1'
+VERSION = 'v2.2'
 ALLDIRS = [(-1, 1), (0, 1), (1, 1), (-1, 0),
            (1, 0), (-1, -1), (0, -1), (1, -1)]
 
@@ -419,28 +419,29 @@ def calculate_stress(grid, stress_from, return_on=1000000000000):
     lines = [
         {'line': to_line_3('_xxxx_'), 'val': 2},
         {'line': to_line_3('_xxxxo'), 'val': 1.5},
-        {'line': to_line_3('oxxxx_'), 'val': 1.5},
         {'line': to_line_3('__xxx__'), 'val': 1},
         #{'line': to_line_3('_x_x_x_'), 'val': 1},
         #{'line': to_line_3('_x__xx_'), 'val': 1},
-        #{'line': to_line_3('_xx__x_'), 'val': 1},
-        {'line': to_line_3('o_xxx_'), 'val': 1},  # ?
+        #{'line': to_line_3('_xx__x_'), 'val': 1},  # ?
         {'line': to_line_3('_x_xx_'), 'val': 1},
         {'line': to_line_3('_xxx_o'), 'val': 1},  # ?
-        {'line': to_line_3('_xx_x_'), 'val': 1},
     ]
     positions = []
     total_stress = 0
-    for x in range(GRID_SIZE_X):
-        for y in range(GRID_SIZE_Y):
-            for dir in [(1, -1), (1, 0), (1, 1), (0, 1)]:
-                line_1 = get_line_3(grid, (x, y), 6, dir, stress_from == 'o')
-                line_2 = get_line_3(grid, (x, y), 7, dir, stress_from == 'o')
-                for stress_yes in lines:
-                    if intersect_lines(stress_yes['line'], line_1) or intersect_lines(stress_yes['line'], line_2):
-                        total_stress += stress_yes['val']
-                    if total_stress >= return_on:
-                        return total_stress
+    for pos in get_all_grid_poss(len(grid), len(grid[0])):
+        x, y = pos
+        dirs_done = []
+        for dir in ALLDIRS:
+            if invertDir(dir) in dirs_done:
+                continue
+            line_1 = get_line_3(grid, (x, y), 6, dir, stress_from == 'o')
+            line_2 = get_line_3(grid, (x, y), 7, dir, stress_from == 'o')
+            for stress_yes in lines:
+                if intersect_lines(stress_yes['line'], line_1) or intersect_lines(stress_yes['line'], line_2):
+                    total_stress += stress_yes['val']
+                    dirs_done.append(dir)
+                if total_stress >= return_on:
+                    return total_stress
     return total_stress
 
 
@@ -910,19 +911,19 @@ def Quiqfinder(grid, placing_as):
     for pos in get_inflated_pos(grid):
         x, y = pos
         matched = {}
-        for dir in ALLDIRS:
-            matched[dirToStr(dir)] = None
+        dirs_done = []
         cnt = 0
         for dir in ALLDIRS:
             line = get_line_3(
                 grid, (x-dir[0]*5, y-dir[1]*5), 9, dir, placing_as == 'o')
             for i, pattern in enumerate(patterns):
-                if matched[dirToStr(invertDir(dir))] != i:
-                    if intersect_lines(pattern, line):
-                        matched[dirToStr(dir)] = i
-                        cnt += 1
-                        if cnt >= 2:
-                            return (x, y)
+                if invertDir(dir) in dirs_done:
+                    continue
+                if intersect_lines(pattern, line):
+                    dirs_done.append(dir)
+                    cnt += 1
+                    if cnt >= 2:
+                        return (x, y)
     return None
 
 
@@ -1476,3 +1477,60 @@ def bot_7(grid, playing_as):
     while True:
         yield next(bot)
     # yield next(bot_3(grid, playing_as))
+
+def stress_bot(grid, playing_as):
+    global_text = ''
+    opponent = 'x'
+    if playing_as == 'x':
+        opponent = 'o'
+    cp_grid = json.loads(json.dumps(grid))
+    possible_positions = get_possible_positions(grid)
+    random.shuffle(possible_positions)
+    lines = [
+        to_line_3('---xx_xx-'),
+        to_line_3('--xxx_x--'),
+        to_line_3('-xxxx_---'),
+        to_line_3('--xoo_oo-'),
+        to_line_3('-xooo_o--'),
+        to_line_3('xoooo_---'),
+        to_line_3('noooo_---'),
+        to_line_3('x-ooo_o--'),
+        to_line_3('--ooo_o--'),
+        to_line_3('-_xxx_---'),
+        to_line_3('--_xx_x_-'),
+        to_line_3('-_ooo_---'),
+        to_line_3('--_oo_o_-'),
+        to_line_3('---oo_o_-'),
+        to_line_3('--_oo_o--'),
+    ]
+    for line_to_defo in lines:
+        yield
+        for pos in possible_positions:
+            lines_to_check = []
+            for x in range(-1, 2):
+                for y in range(-1, 2):
+                    if x != 0 or y != 0:
+                        dir = (x, y)
+                        lines_to_check.append(get_line_3(
+                            grid, (pos[0]-dir[0]*5, pos[1]-dir[1]*5), 9, dir, playing_as == 'o'))
+            for line in lines_to_check:
+                if intersect_lines(line_to_defo, line):
+                    yield pos
+    yield
+    cp_grid = json.loads(json.dumps(grid))
+    quiq = Quiqfinder(grid, playing_as)
+    if quiq != None:
+        yield quiq
+    quiq = Quiqfinder(grid, opponent)
+    if quiq != None:
+        yield quiq
+    for pos in get_inflated_pos(grid):
+        yield
+        x, y = pos
+        cp_grid[x][y] = playing_as
+        if calculate_stress(cp_grid, playing_as, return_on=1):
+            yield pos
+        cp_grid[x][y] = '_'
+    bot_gen = bot_proto_6(grid, playing_as)
+    while True:
+        yield next(bot_gen)
