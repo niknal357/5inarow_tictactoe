@@ -38,7 +38,7 @@ USABLE_AMOUNT_OF_SCREEN = 0.94
 SQUARE_PADDING = 0.05
 BOT_PLAY_DELAY = 0.05
 REPLAY_PLAY_DELAY = 1
-VERSION = 'v2.2'
+VERSION = 'v2.2.1'
 ALLDIRS = [(-1, 1), (0, 1), (1, 1), (-1, 0),
            (1, 0), (-1, -1), (0, -1), (1, -1)]
 
@@ -910,7 +910,6 @@ def Quiqfinder(grid, placing_as):
     #    for y in y_s:
     for pos in get_inflated_pos(grid):
         x, y = pos
-        matched = {}
         dirs_done = []
         cnt = 0
         for dir in ALLDIRS:
@@ -926,6 +925,47 @@ def Quiqfinder(grid, placing_as):
                         return (x, y)
     return None
 
+def Quiqone(grid, placing_as):
+    patterns = [
+        #      placing: V
+        to_line_3('-_xxx_o--'),
+        to_line_3('--_xx_xo-'),
+        to_line_3('---_x_xxo'),
+        to_line_3('-oxxx__--'),
+        to_line_3('-x_xx_o--'),
+        to_line_3('--x_x_xo-'),
+        to_line_3('---x__xxo'),
+        to_line_3('oxxx__---'),
+        to_line_3('-xx_x_o--'),
+        to_line_3('--xx__xo-'),
+        to_line_3('-oxx__x--'),
+        to_line_3('oxx_x_---'),
+        to_line_3('-__xx___-'),
+        to_line_3('--__x_x__'),
+        to_line_3('-_x_x__--'),
+        to_line_3('--_x__x_-'),
+        to_line_3('-_xx___--'),
+        # to_line_3('_x_x___--'),
+        # to_line_3('--_x___x_'),
+        # to_line_3('_xx____--'),
+        # to_line_3('_x__x__--'),
+        # to_line_3('-_x___x_-'),
+    ]
+    #x_s = list(range(len(grid)))
+    #y_s = list(range(len(grid[0])))
+    # random.shuffle(x_s)
+    # random.shuffle(y_s)
+    # for x in x_s:
+    #    for y in y_s:
+    for pos in get_inflated_pos(grid):
+        x, y = pos
+        for dir in ALLDIRS:
+            line = get_line_3(
+                grid, (x-dir[0]*5, y-dir[1]*5), 9, dir, placing_as == 'o')
+            for i, pattern in enumerate(patterns):
+                if intersect_lines(pattern, line):
+                    return (x, y)
+    return None
 
 def calculate_grid_intersection_values(grid, calculating_for):
     value_grid = []
@@ -1517,20 +1557,22 @@ def stress_bot(grid, playing_as):
                 if intersect_lines(line_to_defo, line):
                     yield pos
     yield
-    cp_grid = json.loads(json.dumps(grid))
     quiq = Quiqfinder(grid, playing_as)
     if quiq != None:
         yield quiq
+    yield
     quiq = Quiqfinder(grid, opponent)
     if quiq != None:
         yield quiq
-    for pos in get_inflated_pos(grid):
-        yield
-        x, y = pos
-        cp_grid[x][y] = playing_as
-        if calculate_stress(cp_grid, playing_as, return_on=1):
-            yield pos
-        cp_grid[x][y] = '_'
+    yield
+    quiq = Quiqone(grid, playing_as)
+    if quiq != None:
+        yield quiq
+    yield
+    quiq = Quiqone(grid, opponent)
+    if quiq != None:
+        yield quiq
+    yield
     bot_gen = bot_proto_6(grid, playing_as)
     while True:
         yield next(bot_gen)
