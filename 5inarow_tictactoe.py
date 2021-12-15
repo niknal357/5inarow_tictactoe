@@ -72,8 +72,22 @@ turn_times = []
 X_BOT = None
 O_BOT = bot_attempt_2
 
-bots = [{'name': 'Human', 'func': None}, {'name': 'Kabir', 'func': Kabir}, {'name': 'Bot 2',
-                                                                            'func': bot_attempt_2}, {'name': 'Bot 3', 'func': bot_3}, {'name': 'Bot 3.1', 'func': bot_quasi_3}, {'name': 'Bot 4', 'func': bot_4}, {'name': 'Bot 5', 'func': bot_5}, {'name': 'Bot 6', 'func': bot_proto_6}, {'name': 'Over-dedicated', 'func': over_dedicated_bot}, {'name': 'Easy Bot', 'func': easy_bot}, {'name': 'Manzoh Bot', 'func': manzoh_bot}, {'name': 'Meh Bot', 'func': meh_bot}, {'name': 'Bot 7', 'func': bot_7}]  # {'name': 'Stress Depth', 'func': stress_depth_search}, {'name': 'Bot 5', 'func': bot_5}]
+bots = [
+    {'name': 'Human', 'func': None},
+    {'name': 'Easy Bot', 'func': easy_bot},
+    {'name': 'Kabir', 'func': Kabir},
+    {'name': 'Manzoh Bot', 'func': manzoh_bot},
+    {'name': 'Over-dedicated', 'func': over_dedicated_bot},
+    {'name': 'Meh Bot', 'func': meh_bot},
+    {'name': 'Stress Bot', 'func': stress_bot},
+    {'name': 'Bot 2', 'func': bot_attempt_2},
+    {'name': 'Bot 3', 'func': bot_3},
+    {'name': 'Bot 3.1', 'func': bot_quasi_3},
+    {'name': 'Bot 4', 'func': bot_4},
+    {'name': 'Bot 5', 'func': bot_5},
+    {'name': 'Bot 6', 'func': bot_proto_6},
+    {'name': 'Bot 7', 'func': bot_7},
+]
 
 
 def replay_bot(grid, playing_as):
@@ -208,7 +222,7 @@ if not save_replay:
 
 game_running = True
 x_player = 0
-o_player = -7
+o_player = -1
 
 x_memory = None
 o_memory = None
