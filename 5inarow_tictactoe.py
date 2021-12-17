@@ -7,14 +7,17 @@ import os
 if not os.path.exists('replays/'):
     os.makedirs('replays/')
 
+
 def install(package):
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--trusted-host", "pypi.org",
                           "--trusted-host", "pypi.python.org", "--trusted-host", "files.pythonhosted.org", package])
 
+
 BOT_THINKING_TIME_ALLOWED = 1/10
 DEBUG_RENDERING = False
 
-subprocess.run(["curl", "--insecure", "https://raw.githubusercontent.com/niknal357/5inarow_tictactoe/main/tictactoe_lib.py", "-o", "tictactoe_lib.py"])
+# subprocess.run(["curl", "--insecure",
+#                "https://raw.githubusercontent.com/niknal357/5inarow_tictactoe/main/tictactoe_lib.py", "-o", "tictactoe_lib.py"])
 
 if True:
     from tictactoe_lib import *
@@ -58,7 +61,8 @@ else:
     replay = ''
 
 if save_replay:
-    replay_file = 'replays/'+str(int(time.time()))+str(random.randint(0, 999999))+'.replay'
+    replay_file = 'replays/'+str(int(time.time())) + \
+        str(random.randint(0, 999999))+'.replay'
 
 win = '_'
 win_x_1 = None
@@ -85,7 +89,7 @@ bots = [
     {'name': 'Bot 3.1', 'func': bot_quasi_3},
     {'name': 'Bot 4', 'func': bot_4},
     {'name': 'Bot 5', 'func': bot_5},
-    {'name': 'Bot 6', 'func': bot_proto_6},
+    {'name': 'Bot 6', 'func': bot_6},
     {'name': 'Bot 7', 'func': bot_7},
 ]
 
@@ -124,7 +128,8 @@ def setup():
     win_y_2 = None
     x_memory = None
     o_memory = None
-    replay_file = 'replays/'+str(int(time.time()))+str(random.randint(0, 999999))+'.replay'
+    replay_file = 'replays/'+str(int(time.time())) + \
+        str(random.randint(0, 999999))+'.replay'
     grid = []
     for x in range(GRID_SIZE_X):
         grid.append([])
@@ -228,6 +233,7 @@ x_memory = None
 o_memory = None
 
 bot_generator = None
+
 
 def menu():
     global X_BOT
@@ -368,6 +374,7 @@ def menu():
 
 mousewasdown = True
 
+
 def main():
     global global_text
     global bot_generator
@@ -455,26 +462,30 @@ def main():
                     if collide_with_y != None:
                         try:
                             pygame.mouse.set_pos(grid_coords[collide_with_x][collide_with_y-1][0]/2+grid_coords[collide_with_x][collide_with_y-1]
-                                                [2]/2, grid_coords[collide_with_x][collide_with_y-1][1]/2+grid_coords[collide_with_x][collide_with_y-1][3]/2)
-                        except: pass
+                                                 [2]/2, grid_coords[collide_with_x][collide_with_y-1][1]/2+grid_coords[collide_with_x][collide_with_y-1][3]/2)
+                        except:
+                            pass
                 if event.key == pygame.K_DOWN:
                     if collide_with_y != None:
                         try:
                             pygame.mouse.set_pos(grid_coords[collide_with_x][collide_with_y+1][0]/2+grid_coords[collide_with_x][collide_with_y+1]
-                                                [2]/2, grid_coords[collide_with_x][collide_with_y+1][1]/2+grid_coords[collide_with_x][collide_with_y+1][3]/2)
-                        except: pass
+                                                 [2]/2, grid_coords[collide_with_x][collide_with_y+1][1]/2+grid_coords[collide_with_x][collide_with_y+1][3]/2)
+                        except:
+                            pass
                 if event.key == pygame.K_LEFT:
                     if collide_with_y != None:
                         try:
                             pygame.mouse.set_pos(grid_coords[collide_with_x-1][collide_with_y][0]/2+grid_coords[collide_with_x-1][collide_with_y]
-                                                [2]/2, grid_coords[collide_with_x-1][collide_with_y][1]/2+grid_coords[collide_with_x-1][collide_with_y][3]/2)
-                        except: pass
+                                                 [2]/2, grid_coords[collide_with_x-1][collide_with_y][1]/2+grid_coords[collide_with_x-1][collide_with_y][3]/2)
+                        except:
+                            pass
                 if event.key == pygame.K_RIGHT:
                     if collide_with_y != None:
                         try:
                             pygame.mouse.set_pos(grid_coords[collide_with_x+1][collide_with_y][0]/2+grid_coords[collide_with_x+1][collide_with_y]
-                                                [2]/2, grid_coords[collide_with_x+1][collide_with_y][1]/2+grid_coords[collide_with_x+1][collide_with_y][3]/2)
-                        except: pass
+                                                 [2]/2, grid_coords[collide_with_x+1][collide_with_y][1]/2+grid_coords[collide_with_x+1][collide_with_y][3]/2)
+                        except:
+                            pass
         screen.fill(BACKGROUND)
         for line in vert_lines:
             pygame.draw.line(screen, GREY, (line, y_size /
@@ -484,7 +495,7 @@ def main():
                              2-width/2, line), (x_size/2+width/2, line), width=1)
         collide_with_x = None
         collide_with_y = None
-        #print(framerate)
+        # print(framerate)
         for x in range(GRID_SIZE_X):
             for y in range(GRID_SIZE_Y):
                 square_rect = pygame.Rect((grid_coords[x][y][0], grid_coords[x][y][1]), (
@@ -588,9 +599,9 @@ def main():
                         bot_generator = turnbot(grid, turn)
                     end_time = time.time()+BOT_THINKING_TIME_ALLOWED
                     res = None
-                    while time.time()<end_time and res == None:
+                    while time.time() < end_time and res == None:
                         res = next(bot_generator)
-                    #print(res)
+                    # print(res)
                     if type(res) == str:
                         global_text = res
                     elif res != None:
@@ -621,7 +632,7 @@ def main():
                         hint_position_y = None
                         if save_replay:
                             replay += (str(coords_to_place[0]) +
-                                    ':'+str(coords_to_place[1]))+','
+                                       ':'+str(coords_to_place[1]))+','
                         last_x = coords_to_place[0]
                         last_y = coords_to_place[1]
                         scan_for_win(grid)
@@ -732,7 +743,7 @@ def main():
                 else:
                     txt += '('+replay_name_o+') '
             txt += global_text
-            #print(global_text)
+            # print(global_text)
             text = small_font.render(txt, True, WHITE)
             screen.blit(text, (25+height_of_label, 15 +
                         height_of_label/2 - small_font.size(txt)[1]/2))
