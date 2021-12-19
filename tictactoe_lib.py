@@ -38,15 +38,15 @@ USABLE_AMOUNT_OF_SCREEN = 0.94
 SQUARE_PADDING = 0.05
 BOT_PLAY_DELAY = 0.05
 REPLAY_PLAY_DELAY = 1
-VERSION = 'v2.2.2'
+VERSION = 'v2.2.3'
 ALLDIRS = [(-1, 1), (0, 1), (1, 1), (-1, 0),
            (1, 0), (-1, -1), (0, -1), (1, -1)]
 
 #GRID_SIZE_X = 16*3
 #GRID_SIZE_Y = 9*3
 
-GRID_SIZE_X = 19
-GRID_SIZE_Y = 19
+GRID_SIZE_X = 20
+GRID_SIZE_Y = 20
 
 RED = (236, 65, 69)
 GREEN = (61, 165, 96)
@@ -419,29 +419,28 @@ def calculate_stress(grid, stress_from, return_on=1000000000000):
     lines = [
         {'line': to_line_3('_xxxx_'), 'val': 2},
         {'line': to_line_3('_xxxxo'), 'val': 1.5},
+        {'line': to_line_3('oxxxx_'), 'val': 1.5},
         {'line': to_line_3('__xxx__'), 'val': 1},
         #{'line': to_line_3('_x_x_x_'), 'val': 1},
         #{'line': to_line_3('_x__xx_'), 'val': 1},
-        # {'line': to_line_3('_xx__x_'), 'val': 1},  # ?
+        #{'line': to_line_3('_xx__x_'), 'val': 1},
+        {'line': to_line_3('o_xxx_'), 'val': 1},  # ?
         {'line': to_line_3('_x_xx_'), 'val': 1},
         {'line': to_line_3('_xxx_o'), 'val': 1},  # ?
+        {'line': to_line_3('_xx_x_'), 'val': 1},
     ]
     positions = []
     total_stress = 0
-    for pos in get_all_grid_poss(len(grid), len(grid[0])):
-        x, y = pos
-        dirs_done = []
-        for dir in ALLDIRS:
-            if invertDir(dir) in dirs_done:
-                continue
-            line_1 = get_line_3(grid, (x, y), 6, dir, stress_from == 'o')
-            line_2 = get_line_3(grid, (x, y), 7, dir, stress_from == 'o')
-            for stress_yes in lines:
-                if intersect_lines(stress_yes['line'], line_1) or intersect_lines(stress_yes['line'], line_2):
-                    total_stress += stress_yes['val']
-                    dirs_done.append(dir)
-                if total_stress >= return_on:
-                    return total_stress
+    for x in range(GRID_SIZE_X):
+        for y in range(GRID_SIZE_Y):
+            for dir in [(1, -1), (1, 0), (1, 1), (0, 1)]:
+                line_1 = get_line_3(grid, (x, y), 6, dir, stress_from == 'o')
+                line_2 = get_line_3(grid, (x, y), 7, dir, stress_from == 'o')
+                for stress_yes in lines:
+                    if intersect_lines(stress_yes['line'], line_1) or intersect_lines(stress_yes['line'], line_2):
+                        total_stress += stress_yes['val']
+                    if total_stress >= return_on:
+                        return total_stress
     return total_stress
 
 
@@ -879,56 +878,6 @@ def dirToStr(dir):
 def Quiqfinder(grid, placing_as):
     patterns = [
         #      placing: V
-        to_line_3('-_xxx_---'),
-        to_line_3('--_xx_x--'),
-        to_line_3('---_x_xx-'),
-        to_line_3('--xxx__--'),
-        to_line_3('-x_xx_---'),
-        to_line_3('--x_x_x--'),
-        to_line_3('---x__xx-'),
-        to_line_3('-xxx__---'),
-        to_line_3('-xx_x_---'),
-        to_line_3('--xx__x--'),
-        to_line_3('--xx__x--'),
-        to_line_3('-xx_x_---'),
-        to_line_3('-__xx___-'),
-        to_line_3('--__x_x__'),
-        to_line_3('-_x_x__--'),
-        to_line_3('--_x__x_-'),
-        to_line_3('-_xx___--'),
-        # to_line_3('_x_x___--'),
-        # to_line_3('--_x___x_'),
-        # to_line_3('_xx____--'),
-        # to_line_3('_x__x__--'),
-        # to_line_3('-_x___x_-'),
-    ]
-    #x_s = list(range(len(grid)))
-    #y_s = list(range(len(grid[0])))
-    # random.shuffle(x_s)
-    # random.shuffle(y_s)
-    # for x in x_s:
-    #    for y in y_s:
-    for pos in get_inflated_pos(grid):
-        x, y = pos
-        dirs_done = []
-        cnt = 0
-        for dir in ALLDIRS:
-            line = get_line_3(
-                grid, (x-dir[0]*5, y-dir[1]*5), 9, dir, placing_as == 'o')
-            for i, pattern in enumerate(patterns):
-                if invertDir(dir) in dirs_done:
-                    continue
-                if intersect_lines(pattern, line):
-                    dirs_done.append(dir)
-                    cnt += 1
-                    if cnt >= 2:
-                        return (x, y)
-    return None
-
-
-def QuiqfinderOLD(grid, placing_as):
-    patterns = [
-        #      placing: V
         to_line_3('-_xxx_o--'),
         to_line_3('--_xx_xo-'),
         to_line_3('---_x_xxo'),
@@ -960,62 +909,20 @@ def QuiqfinderOLD(grid, placing_as):
     #    for y in y_s:
     for pos in get_inflated_pos(grid):
         x, y = pos
-        dirs_done = []
+        matched = {}
+        for dir in ALLDIRS:
+            matched[dirToStr(dir)] = None
         cnt = 0
         for dir in ALLDIRS:
             line = get_line_3(
                 grid, (x-dir[0]*5, y-dir[1]*5), 9, dir, placing_as == 'o')
             for i, pattern in enumerate(patterns):
-                if invertDir(dir) in dirs_done:
-                    continue
-                if intersect_lines(pattern, line):
-                    dirs_done.append(dir)
-                    cnt += 1
-                    if cnt >= 2:
-                        return (x, y)
-    return None
-
-
-def Quiqone(grid, placing_as):
-    patterns = [
-        #      placing: V
-        to_line_3('-_xxx_o--'),
-        to_line_3('--_xx_xo-'),
-        to_line_3('---_x_xxo'),
-        to_line_3('-oxxx__--'),
-        to_line_3('-x_xx_o--'),
-        to_line_3('--x_x_xo-'),
-        to_line_3('---x__xxo'),
-        to_line_3('oxxx__---'),
-        to_line_3('-xx_x_o--'),
-        to_line_3('--xx__xo-'),
-        to_line_3('-oxx__x--'),
-        to_line_3('oxx_x_---'),
-        to_line_3('-__xx___-'),
-        to_line_3('--__x_x__'),
-        to_line_3('-_x_x__--'),
-        to_line_3('--_x__x_-'),
-        to_line_3('-_xx___--'),
-        # to_line_3('_x_x___--'),
-        # to_line_3('--_x___x_'),
-        # to_line_3('_xx____--'),
-        # to_line_3('_x__x__--'),
-        # to_line_3('-_x___x_-'),
-    ]
-    #x_s = list(range(len(grid)))
-    #y_s = list(range(len(grid[0])))
-    # random.shuffle(x_s)
-    # random.shuffle(y_s)
-    # for x in x_s:
-    #    for y in y_s:
-    for pos in get_inflated_pos(grid):
-        x, y = pos
-        for dir in ALLDIRS:
-            line = get_line_3(
-                grid, (x-dir[0]*5, y-dir[1]*5), 9, dir, placing_as == 'o')
-            for i, pattern in enumerate(patterns):
-                if intersect_lines(pattern, line):
-                    return (x, y)
+                if matched[dirToStr(invertDir(dir))] != i:
+                    if intersect_lines(pattern, line):
+                        matched[dirToStr(dir)] = i
+                        cnt += 1
+                        if cnt >= 2:
+                            return (x, y)
     return None
 
 
@@ -1574,12 +1481,10 @@ def bot_7(grid, playing_as):
             yield pos
         cp_grid[x][y] = '_'
 
-    bot = bot_5(grid, playing_as)
+    bot = bot_6(grid, playing_as)
     while True:
         yield next(bot)
     # yield next(bot_3(grid, playing_as))
-
-
 def stress_bot(grid, playing_as):
     global_text = ''
     opponent = 'x'
