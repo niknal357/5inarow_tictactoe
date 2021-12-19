@@ -16,7 +16,7 @@ def install(package):
 BOT_THINKING_TIME_ALLOWED = 1/10
 DEBUG_RENDERING = False
 
-subprocess.run(["curl", "--insecure", "https://raw.githubusercontent.com/niknal357/5inarow_tictactoe/main/tictactoe_lib.py", "-o", "tictactoe_lib.py"])
+#subprocess.run(["curl", "--insecure", "https://raw.githubusercontent.com/niknal357/5inarow_tictactoe/main/tictactoe_lib.py", "-o", "tictactoe_lib.py"])
 
 if True:
     from tictactoe_lib import *
@@ -90,6 +90,7 @@ bots = [
     {'name': 'Bot 5', 'func': bot_5},
     {'name': 'Bot 6', 'func': bot_6},
     {'name': 'Bot 7', 'func': bot_7},
+#    {'name': 'Bot 8', 'func': bot_8},
 ]
 
 
