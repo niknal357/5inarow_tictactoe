@@ -283,6 +283,8 @@ def menu():
                         button_size[1]//2-button_spacing//2)
         button_2_pos = (x_size//2, y_size//2 +
                         button_size[1]//2+button_spacing//2)
+        button_3_pos = (x_size//2, y_size//2 +
+                        button_size[1]//2*3+button_spacing//2*3)
         mouse_pos = pygame.mouse.get_pos()
         screen.fill(BACKGROUND)
         play_rect = pygame.Rect(
@@ -318,6 +320,27 @@ def menu():
         text = big_font.render(txt, True, WHITE)
         screen.blit(text, (button_2_pos[0]-big_font.size(txt)
                     [0]//2, button_2_pos[1]-big_font.size(txt)[1]//2))
+        #UPDATE BUTTON
+        update_rect = pygame.Rect(
+            button_3_pos[0]-button_size[0]//2, button_3_pos[1]-button_size[1]//2, button_size[0], button_size[1])
+        color = BACKGROUND_DARK
+        if update_rect.collidepoint(mouse_pos[0], mouse_pos[1]):
+            color = BLACK
+            if mouse_down and mouse_was_down:
+                try:
+                    os.mkdir('..\\tictac2')
+                except:
+                    print('../tictac2 already exists, skipping creation')
+                subprocess.run(["curl", "--insecure", "https://raw.githubusercontent.com/niknal357/tictac2/main/update_and_run.bat", '-o', '../tictac2/update_and_run.bat'])
+                pygame.quit()
+                return 'updated'
+        pygame.draw.rect(screen, color, update_rect, width=0, border_radius=10)
+        # pygame.draw.rect(screen, WHITE, quit_rect,
+        #                 width=2, border_radius=10)
+        txt = 'update v3'
+        text = big_font.render(txt, True, WHITE)
+        screen.blit(text, (button_3_pos[0]-big_font.size(txt)
+                    [0]//2, button_3_pos[1]-big_font.size(txt)[1]//2))
 
         x_toggle_button = pygame.Rect(25, 25, 75, 75)
         color = BACKGROUND_DARK
@@ -815,7 +838,10 @@ if __name__ == '__main__':
     if save_replay:
         while game_running:
             setup()
-            menu()
+            res = menu()
+            if res == 'updated':
+                subprocess.run(['..\\tictac2\\update_and_run.bat'])
+                sys.exit(0)
             if not game_running:
                 break
             main()
